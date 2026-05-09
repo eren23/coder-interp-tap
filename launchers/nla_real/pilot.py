@@ -1,21 +1,26 @@
-"""Real NLA pilot launcher.
+"""Real NLA pilot launcher (transformers-only, no sglang).
 
-End-to-end pipeline that produces actual natural-language descriptions
-of Qwen2.5-7B-Instruct activation vectors via the kitft NLA Activation
-Verbalizer at layer 20.
+End-to-end pipeline that produces actual natural-language descriptions of
+Qwen2.5-7B-Instruct activation vectors via the kitft Activation Verbalizer
+at layer 20.
+
+The injection protocol (per kitft's nla_meta.yaml):
+  - prompt template wraps the ㈎ injection char inside <concept>...</concept>
+  - tokenize the chat-templated prompt
+  - find positions where token_id == injection_token_id (149705 for Qwen 7B)
+    AND validate left/right neighbor IDs match the sidecar
+  - in the embedding tensor produced by the AV's input embedding layer,
+    REPLACE the embedding at the injection position with the activation
+    vector L2-normalized and rescaled to injection_scale (150.0 for 7B)
+  - call model.generate(inputs_embeds=..., attention_mask=...) and decode
 
 Pipeline:
-  1. Define a small prompt set (NUM_PROMPTS, POSITIONS_PER_PROMPT).
-  2. Load Qwen2.5-7B-Instruct, forward each prompt, capture
-     hidden_states[NLA_LAYER] at chosen token positions. Free base.
-  3. Save (prompt_idx, position, token_text, vector) tuples to parquet.
-  4. Clone the kitft NLA repo. Start sglang serving the AV checkpoint.
-  5. Wait for sglang readiness (poll /get_model_info).
-  6. Run kitft's nla_inference.py against the parquet, capture stdout.
-  7. Parse output (descriptions separated by lines of dashes) and align
-     with the original (prompt, position, token) tuples.
-  8. Log a wandb.Table with (idx, prompt, position, token, description).
-  9. Tear down sglang.
+  1. Capture L20 hidden states from Qwen2.5-7B over NUM_PROMPTS prompts.
+  2. Free base. Load AV checkpoint + read its nla_meta.yaml for injection
+     params (`huggingface_hub.hf_hub_download`).
+  3. For each captured activation: build chat-templated prompt, tokenize,
+     inject normalized activation, generate, decode, extract <explanation>.
+  4. Log W&B Table with (idx, prompt, position, token_text, description).
 """
 
 from __future__ import annotations
@@ -23,11 +28,7 @@ from __future__ import annotations
 import gc
 import os
 import re
-import signal
-import subprocess
-import sys
 import time
-import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -44,12 +45,9 @@ def _env(name: str, default: str | None = None) -> str:
 class Cfg:
     base_model: str
     av_repo: str
-    ar_repo: str
     layer: int
     num_prompts: int
     positions_per_prompt: int
-    sglang_port: int
-    sglang_boot_timeout_s: int
     max_new_tokens: int
     temperature: float
     workspace: Path
@@ -62,12 +60,9 @@ def load_cfg() -> Cfg:
     return Cfg(
         base_model=_env("BASE_MODEL", "Qwen/Qwen2.5-7B-Instruct"),
         av_repo=_env("AV_REPO", "kitft/nla-qwen2.5-7b-L20-av"),
-        ar_repo=_env("AR_REPO", "kitft/nla-qwen2.5-7b-L20-ar"),
         layer=int(_env("NLA_LAYER", "20")),
         num_prompts=int(_env("NUM_PROMPTS", "3")),
         positions_per_prompt=int(_env("POSITIONS_PER_PROMPT", "1")),
-        sglang_port=int(_env("SGLANG_PORT", "30000")),
-        sglang_boot_timeout_s=int(_env("SGLANG_BOOT_TIMEOUT_S", "900")),
         max_new_tokens=int(_env("MAX_NEW_TOKENS", "120")),
         temperature=float(_env("TEMPERATURE", "0.5")),
         workspace=Path("/workspace/project"),
@@ -103,14 +98,14 @@ PROMPTS = [
 
 def capture_activations(cfg: Cfg) -> Path:
     """Forward prompts through the base model, dump (prompt_idx, position,
-    token_text, vector) rows to parquet."""
+    token_text, vector) rows to parquet. Returns parquet path."""
 
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
     import pyarrow as pa
     import pyarrow.parquet as pq
 
-    print(f"[capture] loading base model {cfg.base_model} ...", flush=True)
+    print(f"[capture] loading base {cfg.base_model} ...", flush=True)
     tok = AutoTokenizer.from_pretrained(cfg.base_model)
     model = AutoModelForCausalLM.from_pretrained(
         cfg.base_model,
@@ -118,22 +113,16 @@ def capture_activations(cfg: Cfg) -> Path:
         device_map="cuda",
     )
 
-    chosen_prompts = PROMPTS[: cfg.num_prompts]
-    rows_prompt_idx: list[int] = []
-    rows_position: list[int] = []
-    rows_token: list[str] = []
-    rows_prompt: list[str] = []
-    rows_vec: list[list[float]] = []
+    chosen = PROMPTS[: cfg.num_prompts]
+    rows_idx, rows_pos, rows_tok, rows_prompt, rows_vec = [], [], [], [], []
 
     with torch.inference_mode():
-        for p_idx, prompt in enumerate(chosen_prompts):
+        for p_idx, prompt in enumerate(chosen):
             ids = tok(prompt, return_tensors="pt").to("cuda")
             out = model(**ids, output_hidden_states=True)
             hs = out.hidden_states[cfg.layer][0]  # (seq_len, d)
             seq_len = hs.shape[0]
 
-            # Pick `positions_per_prompt` positions, biased toward the back
-            # so we avoid the BOS / very-early-token region.
             if cfg.positions_per_prompt <= 1 or seq_len <= 2:
                 positions = [seq_len - 1]
             else:
@@ -148,9 +137,9 @@ def capture_activations(cfg: Cfg) -> Path:
             for pos in positions:
                 tok_text = tok.decode([ids_list[pos]])
                 vec = hs[pos].float().cpu().tolist()
-                rows_prompt_idx.append(p_idx)
-                rows_position.append(pos)
-                rows_token.append(tok_text)
+                rows_idx.append(p_idx)
+                rows_pos.append(pos)
+                rows_tok.append(tok_text)
                 rows_prompt.append(prompt)
                 rows_vec.append(vec)
 
@@ -161,155 +150,162 @@ def capture_activations(cfg: Cfg) -> Path:
 
     cfg.workspace.mkdir(parents=True, exist_ok=True)
     parquet_path = cfg.workspace / "activations.parquet"
-
-    table = pa.table(
-        {
-            "activation_vector": rows_vec,
-            "prompt_idx": rows_prompt_idx,
-            "position": rows_position,
-            "token_text": rows_token,
-            "prompt": rows_prompt,
-        }
+    pq.write_table(
+        pa.table(
+            {
+                "activation_vector": rows_vec,
+                "prompt_idx": rows_idx,
+                "position": rows_pos,
+                "token_text": rows_tok,
+                "prompt": rows_prompt,
+            }
+        ),
+        parquet_path,
     )
-    pq.write_table(table, parquet_path)
     print(f"[capture] wrote {len(rows_vec)} rows to {parquet_path}", flush=True)
 
-    del model
-    del tok
+    del model, tok
     gc.collect()
-    torch.cuda.empty_cache()
-
+    import torch as _torch  # noqa
+    _torch.cuda.empty_cache()
     return parquet_path
 
 
-def clone_kitft_repo(cfg: Cfg) -> Path:
-    repo_dir = cfg.workspace / "nla_repo"
-    if repo_dir.exists() and (repo_dir / "nla_inference.py").exists():
-        print(f"[clone] kitft repo already present at {repo_dir}", flush=True)
-        return repo_dir
-    print(f"[clone] cloning kitft repo → {repo_dir}", flush=True)
-    subprocess.run(
-        [
-            "git",
-            "clone",
-            "--depth",
-            "1",
-            "https://github.com/kitft/natural_language_autoencoders",
-            str(repo_dir),
-        ],
-        check=True,
-    )
-    return repo_dir
+def load_meta(av_repo: str) -> dict:
+    """Download nla_meta.yaml from the AV's HF repo + parse."""
+    from huggingface_hub import hf_hub_download
+    import yaml
+
+    print(f"[av] fetching nla_meta.yaml from {av_repo} ...", flush=True)
+    p = hf_hub_download(repo_id=av_repo, filename="nla_meta.yaml")
+    with open(p) as f:
+        return yaml.safe_load(f)
 
 
-def start_sglang(cfg: Cfg) -> subprocess.Popen:
+def verbalize_all(cfg: Cfg, parquet_path: Path) -> list[str]:
+    """Load AV; for each activation in parquet, run injection + generate."""
+
+    import torch
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    import pyarrow.parquet as pq
+
+    meta = load_meta(cfg.av_repo)
+    inj_char = meta["tokens"]["injection_char"]
+    inj_id = int(meta["tokens"]["injection_token_id"])
+    left_id = int(meta["tokens"]["injection_left_neighbor_id"])
+    right_id = int(meta["tokens"]["injection_right_neighbor_id"])
+    inj_scale = float(meta["extraction"]["injection_scale"])
+    template = meta["prompt_templates"]["av"]
     print(
-        f"[sglang] starting on port {cfg.sglang_port} for {cfg.av_repo}",
+        f"[av] meta: char={inj_char!r} id={inj_id} L={left_id} R={right_id} scale={inj_scale}",
         flush=True,
     )
-    log_path = cfg.workspace / "sglang.log"
-    log_fp = open(log_path, "wb")
-    proc = subprocess.Popen(
-        [
-            sys.executable,
-            "-m",
-            "sglang.launch_server",
-            "--model-path",
-            cfg.av_repo,
-            "--port",
-            str(cfg.sglang_port),
-            "--tp",
-            "1",
-            "--mem-fraction-static",
-            "0.85",
-        ],
-        stdout=log_fp,
-        stderr=subprocess.STDOUT,
-        preexec_fn=os.setsid,
-    )
-    print(f"[sglang] pid={proc.pid}; log={log_path}", flush=True)
-    return proc
 
-
-def wait_sglang_ready(cfg: Cfg, proc: subprocess.Popen) -> None:
-    url = f"http://127.0.0.1:{cfg.sglang_port}/get_model_info"
-    deadline = time.time() + cfg.sglang_boot_timeout_s
-    last_status_print = 0.0
-    while time.time() < deadline:
-        if proc.poll() is not None:
-            raise RuntimeError(
-                f"sglang exited with code {proc.returncode}; see "
-                f"{cfg.workspace / 'sglang.log'}"
-            )
-        try:
-            with urllib.request.urlopen(url, timeout=2) as r:
-                if r.status == 200:
-                    print("[sglang] ready", flush=True)
-                    return
-        except Exception:
-            pass
-        if time.time() - last_status_print > 30:
-            elapsed = int(time.time() - (deadline - cfg.sglang_boot_timeout_s))
-            print(f"[sglang] still booting ... t={elapsed}s", flush=True)
-            last_status_print = time.time()
-        time.sleep(3)
-    raise TimeoutError(
-        f"sglang did not become ready within {cfg.sglang_boot_timeout_s}s"
-    )
-
-
-def run_nla_inference(cfg: Cfg, repo_dir: Path, parquet_path: Path) -> str:
-    n = cfg.num_prompts * cfg.positions_per_prompt
-    cmd = [
-        sys.executable,
-        str(repo_dir / "nla_inference.py"),
+    print(f"[av] loading {cfg.av_repo} ...", flush=True)
+    av_tok = AutoTokenizer.from_pretrained(cfg.av_repo)
+    av = AutoModelForCausalLM.from_pretrained(
         cfg.av_repo,
-        "--sglang-url",
-        f"http://127.0.0.1:{cfg.sglang_port}",
-        "--parquet",
-        str(parquet_path),
-        "--n",
-        str(n),
-        "--max-new-tokens",
-        str(cfg.max_new_tokens),
-        "--temperature",
-        str(cfg.temperature),
-    ]
-    print(f"[infer] running: {' '.join(cmd)}", flush=True)
-    out = subprocess.run(
-        cmd,
-        check=True,
-        capture_output=True,
-        text=True,
-        cwd=str(repo_dir),
+        torch_dtype=torch.bfloat16,
+        device_map="cuda",
     )
-    print(
-        f"[infer] stdout {len(out.stdout)} chars; stderr {len(out.stderr)} chars",
-        flush=True,
+
+    # Build the chat-templated prompt once. Since chat formatting and the
+    # injection-char position are deterministic (don't depend on the actual
+    # vector), we tokenize once and reuse.
+    user_content = template.format(injection_char=inj_char)
+    messages = [{"role": "user", "content": user_content}]
+    chat_text = av_tok.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True
     )
-    if out.stderr:
-        print(f"[infer] stderr tail:\n{out.stderr[-2000:]}", flush=True)
-    return out.stdout
+    enc = av_tok(chat_text, return_tensors="pt").to("cuda")
+    input_ids = enc.input_ids[0]  # (T,)
+    attn = enc.attention_mask.to("cuda")
+
+    # Validate injection position(s).
+    candidate_positions = (input_ids == inj_id).nonzero(as_tuple=True)[0].tolist()
+    if not candidate_positions:
+        raise RuntimeError(
+            f"injection token id {inj_id} not in tokenized prompt; "
+            f"first 30 tokens: {input_ids[:30].tolist()}"
+        )
+    valid = []
+    for p in candidate_positions:
+        if p == 0 or p == len(input_ids) - 1:
+            continue
+        if int(input_ids[p - 1]) == left_id and int(input_ids[p + 1]) == right_id:
+            valid.append(p)
+    if not valid:
+        # fall back: take first occurrence; emit a loud warning
+        valid = candidate_positions[:1]
+        print(
+            f"[av] warning: neighbor validation failed at all candidates; "
+            f"using first candidate at pos={valid[0]}",
+            flush=True,
+        )
+    inj_pos = valid[0]
+    print(f"[av] inj_pos={inj_pos} (T={len(input_ids)})", flush=True)
+
+    # Embed the prompt once. We'll mutate a copy each iteration for the
+    # specific activation vector being verbalized.
+    embed_layer = av.get_input_embeddings()
+    base_embeds = embed_layer(input_ids.unsqueeze(0))  # (1, T, d)
+
+    df = pq.read_table(parquet_path).to_pandas()
+    descriptions: list[str] = []
+
+    pad_id = av_tok.pad_token_id or av_tok.eos_token_id
+
+    with torch.inference_mode():
+        for i, row in df.iterrows():
+            vec = torch.tensor(row["activation_vector"], dtype=torch.float32, device="cuda")
+            norm = vec.norm()
+            if norm < 1e-6:
+                print(f"[av] zero-norm vector at row {i}; skipping", flush=True)
+                descriptions.append("")
+                continue
+            scaled = vec * (inj_scale / norm)
+
+            embeds = base_embeds.clone()
+            embeds[0, inj_pos] = scaled.to(embeds.dtype)
+
+            gen = av.generate(
+                inputs_embeds=embeds,
+                attention_mask=attn,
+                max_new_tokens=cfg.max_new_tokens,
+                do_sample=cfg.temperature > 0,
+                temperature=cfg.temperature if cfg.temperature > 0 else 1.0,
+                pad_token_id=pad_id,
+            )
+            # When inputs_embeds is supplied, generate returns ONLY the new
+            # tokens, not the prompt — confirmed across HF transformers >=4.43.
+            new_text = av_tok.decode(gen[0], skip_special_tokens=True)
+            descriptions.append(new_text)
+            preview = (new_text[:160] + "…") if len(new_text) > 160 else new_text
+            print(f"[av] {i}: {preview}", flush=True)
+
+    return descriptions
 
 
-def parse_descriptions(stdout: str, expected: int) -> list[str]:
-    """nla_inference.py prints one description per vector, separated by
-    lines of dashes."""
-    chunks = [c.strip() for c in re.split(r"\n[-]{3,}\n?", stdout) if c.strip()]
-    if not chunks:
-        chunks = [c.strip() for c in stdout.split("\n\n") if c.strip()]
-    if len(chunks) > expected:
-        chunks = chunks[-expected:]
-    while len(chunks) < expected:
-        chunks.append("")
-    return chunks
+_EXP_RE = re.compile(r"<explanation>(.*?)</explanation>", re.DOTALL)
 
 
-def log_to_wandb(cfg: Cfg, parquet_path: Path, descriptions: list[str], stdout: str) -> None:
+def extract_explanation(raw: str) -> str:
+    m = _EXP_RE.search(raw)
+    if m:
+        return m.group(1).strip()
+    return raw.strip()
+
+
+def log_to_wandb(
+    cfg: Cfg,
+    parquet_path: Path,
+    raw_outputs: list[str],
+) -> None:
     import wandb
     import pyarrow.parquet as pq
 
     df = pq.read_table(parquet_path).to_pandas()
+    explanations = [extract_explanation(r) for r in raw_outputs]
 
     wandb.init(
         project=cfg.wandb_project,
@@ -318,7 +314,6 @@ def log_to_wandb(cfg: Cfg, parquet_path: Path, descriptions: list[str], stdout: 
         config={
             "base_model": cfg.base_model,
             "av_repo": cfg.av_repo,
-            "ar_repo": cfg.ar_repo,
             "layer": cfg.layer,
             "num_prompts": cfg.num_prompts,
             "positions_per_prompt": cfg.positions_per_prompt,
@@ -327,28 +322,39 @@ def log_to_wandb(cfg: Cfg, parquet_path: Path, descriptions: list[str], stdout: 
         },
     )
 
-    columns = ["idx", "prompt_idx", "position", "token_text", "prompt", "av_description"]
+    columns = [
+        "idx",
+        "prompt_idx",
+        "position",
+        "token_text",
+        "prompt",
+        "av_explanation",
+        "av_raw",
+    ]
     table = wandb.Table(columns=columns)
     for i, row in df.iterrows():
-        desc = descriptions[i] if i < len(descriptions) else ""
+        raw = raw_outputs[i] if i < len(raw_outputs) else ""
+        explanation = explanations[i] if i < len(explanations) else ""
         table.add_data(
             int(i),
             int(row["prompt_idx"]),
             int(row["position"]),
             str(row["token_text"]),
             str(row["prompt"]),
-            desc,
+            explanation,
+            raw,
         )
     wandb.log({"nla/verbalizations": table})
     wandb.log(
         {
-            "nla/n_described": int(sum(1 for d in descriptions if d.strip())),
-            "nla/n_total": int(len(descriptions)),
+            "nla/n_described": int(sum(1 for e in explanations if e.strip())),
+            "nla/n_total": int(len(explanations)),
         }
     )
-    raw_path = cfg.workspace / "nla_inference_stdout.txt"
-    raw_path.write_text(stdout)
-    artifact = wandb.Artifact("nla-inference-stdout", type="raw-output")
+
+    raw_path = cfg.workspace / "nla_raw_outputs.txt"
+    raw_path.write_text("\n----\n".join(raw_outputs))
+    artifact = wandb.Artifact("nla-raw-outputs", type="raw-output")
     artifact.add_file(str(raw_path))
     wandb.log_artifact(artifact)
     wandb.finish()
@@ -359,29 +365,8 @@ def main() -> int:
     print(f"[main] cfg: {cfg}", flush=True)
 
     parquet_path = capture_activations(cfg)
-    repo_dir = clone_kitft_repo(cfg)
-
-    sglang_proc = start_sglang(cfg)
-    stdout = ""
-    try:
-        wait_sglang_ready(cfg, sglang_proc)
-        stdout = run_nla_inference(cfg, repo_dir, parquet_path)
-        descriptions = parse_descriptions(
-            stdout, expected=cfg.num_prompts * cfg.positions_per_prompt
-        )
-        for i, d in enumerate(descriptions):
-            preview = (d[:160] + "…") if len(d) > 160 else d
-            print(f"[result] {i}: {preview}", flush=True)
-        log_to_wandb(cfg, parquet_path, descriptions, stdout)
-    finally:
-        try:
-            os.killpg(os.getpgid(sglang_proc.pid), signal.SIGTERM)
-        except Exception:
-            pass
-        try:
-            sglang_proc.wait(timeout=20)
-        except Exception:
-            pass
+    raw_outputs = verbalize_all(cfg, parquet_path)
+    log_to_wandb(cfg, parquet_path, raw_outputs)
 
     print("[main] done", flush=True)
     return 0

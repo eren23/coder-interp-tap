@@ -2,19 +2,23 @@ name: nla_real_qwen2_5_7b
 description: |
   Real NLA verbalization pilot. Loads Qwen2.5-7B-Instruct as the base
   model and the kitft NLA Activation Verbalizer (AV) at layer 20, then
-  produces real natural-language descriptions of activation vectors via
-  the kitft inference pipeline (https://github.com/kitft/natural_language_autoencoders).
+  produces actual natural-language descriptions of activation vectors
+  via direct transformers `generate(inputs_embeds=...)` with manual
+  embedding-injection per the NLA protocol (kitft repo:
+  https://github.com/kitft/natural_language_autoencoders).
 
-  Pipeline:
+  Pipeline (no sglang dependency):
     1. capture L20 hidden states from Qwen2.5-7B over a small prompt set
-    2. save activations to parquet
-    3. start an sglang server hosting kitft/nla-qwen2.5-7b-L20-av
-    4. run kitft's nla_inference.py against the parquet file
-    5. parse the AV's text output and log to W&B as a Table
+    2. free base; load AV; load AV's nla_meta.yaml from HF for injection params
+    3. for each activation: build chat-templated prompt with the ㈎ injection
+       char, tokenize, replace embedding at the marker position with the
+       L2-normalized activation rescaled to injection_scale (150.0), then
+       call model.generate(inputs_embeds=...) and decode
+    4. log W&B Table of (idx, prompt, position, token, av_description)
 
   Variants:
-    - smoke   — 3 prompts × 1 vector each, ~$0.30 + ~25 min on 4090 spot
-    - pilot   — 20 prompts × 3 token positions, ~$0.50 + ~35 min
+    - smoke   — 3 prompts × 1 vector each, ~$0.30 + ~10 min on 4090 spot
+    - pilot   — 20 prompts × 3 token positions, ~$0.50 + ~25 min
 
   Usage:
     crucible run_project nla_real_qwen2_5_7b --variant smoke
@@ -26,13 +30,12 @@ shallow: true
 workspace: "/workspace/project"
 
 pod:
-  # Need headroom: Qwen2.5-7B (14GB) + kitft AV (14GB) sequential = 28GB on disk;
-  # +sglang +HF cache +system; 60-80GB volume is safe.
-  # 4090 24GB VRAM is enough since base and AV load sequentially.
+  # Sequential model loading (capture-then-AV) on a single 4090.
+  # Disk: Qwen2.5-7B (14GB) + AV (14GB) + system. 60GB volume is comfortable.
   gpu_type: "NVIDIA GeForce RTX 4090"
   gpu_count: 1
-  container_disk: 60
-  volume_disk: 80
+  container_disk: 50
+  volume_disk: 60
   interruptible: true
 
 python: "3.10"
@@ -40,8 +43,6 @@ python: "3.10"
 install_torch: "torch>=2.5,<2.7"
 install_flags: "--index-url https://download.pytorch.org/whl/cu124"
 
-# sglang is the heavyweight dep; everything else is light.
-# Pinning sglang>=0.5.6 per kitft README.
 install:
   - "transformers>=4.50"
   - "accelerate>=0.30"
@@ -49,16 +50,12 @@ install:
   - "wandb"
   - "pyarrow>=15.0"
   - "safetensors"
-  - "httpx"
-  - "orjson"
   - "pyyaml"
-  - "sglang[all]>=0.5.6"
 
 train: >-
   cd /workspace/project &&
   python3 -u launchers/nla_real/${NLA_VARIANT:-smoke}.py
 
-# 60 min cap; smoke variant override below.
 timeout: 3600
 
 env_forward:
@@ -71,18 +68,11 @@ env_set:
   TOKENIZERS_PARALLELISM: "false"
   WANDB_PROJECT: "coder-interp-pilot"
   WANDB_ENTITY: "eren23"
-  # Put the (large) HF cache on the volume disk, not the container disk.
   HF_HOME: "/workspace/project/.hf"
   TRANSFORMERS_CACHE: "/workspace/project/.hf"
-  # Phase 1 base + NLA pair config
   BASE_MODEL: "Qwen/Qwen2.5-7B-Instruct"
   AV_REPO: "kitft/nla-qwen2.5-7b-L20-av"
-  AR_REPO: "kitft/nla-qwen2.5-7b-L20-ar"
   NLA_LAYER: "20"
-  # sglang server tunables
-  SGLANG_PORT: "30000"
-  SGLANG_BOOT_TIMEOUT_S: "900"   # 15 min for first-time model download + load
-  # Generation
   MAX_NEW_TOKENS: "120"
   TEMPERATURE: "0.5"
 
