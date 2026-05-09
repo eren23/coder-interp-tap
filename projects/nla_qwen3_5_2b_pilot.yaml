@@ -1,0 +1,101 @@
+name: nla_qwen3_5_2b_pilot
+description: |
+  NLA pipeline pilot on Qwen3.5-2B base + Qwen-Scope pre-trained TopK SAE.
+
+  Phase 1 of the SAE/NLA pipeline. Validates the activation-dump →
+  feature-extract → AV-train → quality-probe pipeline on a base model
+  where a pre-trained SAE already exists, before porting to a coder
+  model in Phase 2.
+
+  Variants:
+    - smoke   — 5-minute end-to-end smoke. Downloads model + 1 SAE layer,
+                captures 1K residuals, runs 50 AV training steps, logs to
+                W&B. Validates plumbing only. ~$0.30 per iteration.
+    - pilot   — full Phase 1 run. 200K residual tokens, 32K synthetic
+                feature descriptions via Claude, ~20K AV training steps.
+                ~8h on 4090 spot, ~$5 + ~$32 in Claude API.
+
+  Usage:
+    crucible run_project nla_qwen3_5_2b_pilot --variant smoke
+    crucible run_project nla_qwen3_5_2b_pilot --variant pilot
+
+repo: "https://github.com/eren23/coder-interp-tap"
+branch: main
+shallow: true
+workspace: "/workspace/project"
+
+pod:
+  gpu_type: "NVIDIA GeForce RTX 4090"
+  gpu_count: 1
+  container_disk: 40
+  volume_disk: 40
+  interruptible: true
+
+python: "3.10"
+
+install_torch: "torch>=2.5,<2.7"
+install_flags: "--index-url https://download.pytorch.org/whl/cu124"
+
+install:
+  - "transformers>=4.50"
+  - "accelerate>=0.30"
+  - "h5py"
+  - "huggingface_hub"
+  - "wandb"
+  - "anthropic>=0.30"
+  - "sentence-transformers>=3.0"   # frozen text-encoder for round-trip cosine
+  - "datasets>=2.18,<3.0"
+
+# Default to the smoke launcher; --variant overrides via NLA_VARIANT.
+train: >-
+  cd /workspace/project &&
+  python3 -u launchers/nla_pilot/${NLA_VARIANT:-smoke}.py
+
+# Smokes capped at 30 min so a stuck run gets killed; pilot variant overrides.
+timeout: 1800
+
+# env_forward denylist (Crucible-side) blocks RUNPOD_API_KEY, OPENAI_API_KEY,
+# ANTHROPIC_API_KEY, HF_TOKEN, etc. Put those in .env.runpod.local instead.
+env_forward:
+  - HUGGINGFACE_HUB_TOKEN
+  - WANDB_API_KEY
+
+env_set:
+  PYTHONUNBUFFERED: "1"
+  HF_HUB_ENABLE_HF_TRANSFER: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  WANDB_PROJECT: "coder-interp-pilot"
+  WANDB_ENTITY: "eren23"
+  # Phase 1 model + SAE config
+  BASE_MODEL: "Qwen/Qwen3.5-2B"
+  SAE_REPO: "Qwen/SAE-Res-Qwen3.5-2B-Base-W32K-L0_50"
+  SAE_LAYER: "12"
+  D_MODEL: "2048"
+  D_SAE: "32768"
+  TOPK: "50"
+  # AV training
+  AV_BATCH_SIZE: "64"
+  AV_LR: "3e-4"
+  AV_WARMUP_STEPS: "200"
+  # Synthetic-description generator
+  CLAUDE_MODEL: "claude-sonnet-4-6"
+  DESCRIPTION_BUDGET_USD: "40"
+
+env_defaults:
+  NLA_VARIANT: "smoke"
+  WANDB_RUN_NAME: "nla-qwen3.5-2b-${NLA_VARIANT}"
+
+# Variant-specific env overrides applied per-run by the launcher.
+# (Crucible's `variants` block isn't strictly schema'd here; the launcher
+# reads NLA_VARIANT and dispatches.)
+variants:
+  smoke:
+    NUM_RESIDUALS: "1000"
+    AV_TRAIN_STEPS: "50"
+    EVAL_INTERVAL: "25"
+    timeout: 600
+  pilot:
+    NUM_RESIDUALS: "200000"
+    AV_TRAIN_STEPS: "20000"
+    EVAL_INTERVAL: "1000"
+    timeout: 36000

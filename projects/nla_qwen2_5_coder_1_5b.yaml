@@ -1,0 +1,121 @@
+name: nla_qwen2_5_coder_1_5b
+description: |
+  NLA pipeline on Qwen2.5-Coder-1.5B with a freshly trained TopK SAE.
+
+  Phase 2 of the SAE/NLA pipeline. Trains a TopK SAE on layer 6 of
+  Qwen2.5-Coder-1.5B (no pre-trained coder-SAE exists), then trains an
+  AV verbalizer on those features, then probes intent category
+  recoverability. Phase 3 (LoRA delta study) is also exposed via the
+  `delta` variant once the SAE + AV are ready.
+
+  Variants:
+    - smoke       — 5-minute end-to-end smoke. 1K residuals, 50 SAE
+                    steps, 50 AV steps. ~$0.50 per iteration.
+    - sae_train   — full SAE training only. ~12h on A100 spot, ~$12.
+    - av_train    — AV training over a saved SAE. ~8h on 4090 spot, ~$5.
+    - delta       — LoRA delta study (Phase 3). Requires a small set of
+                    preference / fine-tune signal pairs (synthetic git-history
+                    pairs work as a starter dataset).
+
+  Usage:
+    crucible run_project nla_qwen2_5_coder_1_5b --variant smoke
+    crucible run_project nla_qwen2_5_coder_1_5b --variant sae_train
+    crucible run_project nla_qwen2_5_coder_1_5b --variant av_train
+    crucible run_project nla_qwen2_5_coder_1_5b --variant delta
+
+repo: "https://github.com/eren23/coder-interp-tap"
+branch: main
+shallow: true
+workspace: "/workspace/project"
+
+pod:
+  # SAE training prefers A100 for headroom; AV / delta fit comfortably on 4090.
+  # Override per-variant if Crucible exposes per-variant pod blocks; otherwise
+  # set CRUCIBLE_GPU_TYPE in env_set and the launcher requests accordingly.
+  gpu_type: "NVIDIA GeForce RTX 4090"
+  gpu_count: 1
+  container_disk: 40
+  volume_disk: 60        # SAE training caches more activations
+  interruptible: true
+
+python: "3.10"
+
+install_torch: "torch>=2.5,<2.7"
+install_flags: "--index-url https://download.pytorch.org/whl/cu124"
+
+install:
+  - "transformers>=4.50"
+  - "accelerate>=0.30"
+  - "bitsandbytes>=0.43"
+  - "peft>=0.11"
+  - "trl>=0.9"
+  - "sae-lens>=4.0"            # Phase 2 SAE training
+  - "datasets>=2.18,<3.0"
+  - "h5py"
+  - "huggingface_hub"
+  - "wandb"
+  - "anthropic>=0.30"
+  - "sentence-transformers>=3.0"
+
+train: >-
+  cd /workspace/project &&
+  python3 -u launchers/nla_coder/${NLA_VARIANT:-smoke}.py
+
+timeout: 3600
+
+env_forward:
+  - HUGGINGFACE_HUB_TOKEN
+  - WANDB_API_KEY
+
+env_set:
+  PYTHONUNBUFFERED: "1"
+  HF_HUB_ENABLE_HF_TRANSFER: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  WANDB_PROJECT: "coder-interp-pilot"
+  WANDB_ENTITY: "eren23"
+  # Base model + SAE config
+  BASE_MODEL: "Qwen/Qwen2.5-Coder-1.5B"
+  SAE_LAYER: "6"
+  D_MODEL: "1536"
+  D_SAE: "24576"          # 16x expansion
+  TOPK: "50"
+  # SAE training (Phase 2.1)
+  SAE_DATA_TOKENS: "100000000"
+  SAE_BATCH_SIZE: "4096"
+  SAE_LR: "3e-4"
+  SAE_AUX_LOSS_COEF: "0.0625"
+  # AV training (Phase 2.2)
+  AV_BATCH_SIZE: "64"
+  AV_LR: "3e-4"
+  AV_WARMUP_STEPS: "200"
+  # LoRA + delta (Phase 3)
+  LORA_RANK: "8"
+  LORA_ALPHA: "16"
+  DELTA_HOLDOUT_TOKENS: "5000"
+
+env_defaults:
+  NLA_VARIANT: "smoke"
+  WANDB_RUN_NAME: "nla-qwen2.5-coder-1.5b-${NLA_VARIANT}"
+
+variants:
+  smoke:
+    SAE_DATA_TOKENS: "10000"
+    SAE_TRAIN_STEPS: "50"
+    AV_TRAIN_STEPS: "50"
+    EVAL_INTERVAL: "25"
+    timeout: 600
+  sae_train:
+    SAE_TRAIN_STEPS: "50000"
+    EVAL_INTERVAL: "500"
+    CHECKPOINT_INTERVAL: "5000"
+    timeout: 50000
+  av_train:
+    AV_TRAIN_STEPS: "20000"
+    EVAL_INTERVAL: "1000"
+    CHECKPOINT_INTERVAL: "5000"
+    timeout: 36000
+  delta:
+    LORA_TRAIN_STEPS: "500"
+    DELTA_BOOTSTRAP_SAMPLES: "1000"
+    EVAL_INTERVAL: "100"
+    timeout: 14400

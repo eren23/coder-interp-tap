@@ -1,0 +1,30 @@
+name: wandb_periodic_validation
+type: callback
+version: 0.1.0
+description: |
+  Runs validation every EVAL_INTERVAL steps and logs to W&B.
+  Logs scalar metrics (val/loss, val/distinctiveness, val/round_trip_cosine)
+  and artifacts (sample feature descriptions as a wandb.Table).
+  Saves a checkpoint every CHECKPOINT_INTERVAL steps.
+author: eren23
+entrypoint: wandb_periodic_validation.WandbPeriodicValidation
+dependencies:
+  - wandb
+  - torch>=2.5
+config_schema:
+  eval_interval:
+    type: int
+    default: 1000
+    description: Steps between validation runs.
+  checkpoint_interval:
+    type: int
+    default: 5000
+    description: Steps between checkpoint saves. 0 disables.
+  num_eval_samples:
+    type: int
+    default: 200
+    description: Number of held-out samples per eval pass.
+  log_table_size:
+    type: int
+    default: 20
+    description: Sample feature descriptions logged as a W&B Table per eval.

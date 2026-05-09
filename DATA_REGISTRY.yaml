@@ -1,0 +1,40 @@
+# Canonical data files for the SAE/NLA pilots in this tap.
+# Anything in data/ not listed here is experimental or deprecated.
+# Launchers print registry status at startup when this file exists.
+
+files:
+  qwen3_5_2b_residuals_layer12.h5:
+    version: "0.1"
+    created: null
+    source: "Qwen/Qwen3.5-2B + custom token sampling"
+    samples: 200000
+    layer: 12
+    d_model: 2048
+    has_features: false
+    has_residuals: true
+    status: planned
+    notes: "Phase 1 activations dump for NLA pilot. Cached residual stream at layer 12 over 200K stratified code tokens."
+
+  qwen3_5_2b_features_layer12.h5:
+    version: "0.1"
+    created: null
+    source: "qwen3_5_2b_residuals_layer12.h5 + Qwen-Scope SAE layer 12"
+    samples: 200000
+    layer: 12
+    d_sae: 32768
+    topk_l0: 50
+    has_features: true
+    status: planned
+    notes: "SAE feature activations (top-50) for AV training in Phase 1."
+
+  qwen2_5_coder_1_5b_residuals_layer6.h5:
+    version: "0.1"
+    created: null
+    source: "Qwen/Qwen2.5-Coder-1.5B + CommitPackFT + personal repos"
+    samples: 1000000
+    layer: 6
+    d_model: 1536
+    has_features: false
+    has_residuals: true
+    status: planned
+    notes: "Phase 2 SAE training corpus. 1M code tokens, layer 6 of 12."

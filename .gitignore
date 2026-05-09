@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Crucible / runtime
+.crucible-cache/
+runs/
+wandb/
+checkpoints/
+.env
+.env.runpod.local
+.env.local
+
+# Data — only DATA_REGISTRY-tracked HDF5s belong on the tap
+data/*.h5
+data/*.parquet
+data/*.arrow
+!data/.gitkeep
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
