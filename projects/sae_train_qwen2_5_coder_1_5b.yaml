@@ -99,3 +99,9 @@ variants:
     EVAL_INTERVAL: "500"
     CHECKPOINT_INTERVAL: "2500"
     timeout: 36000
+  overnight:
+    SAE_TRAIN_STEPS: "100000"
+    LOG_INTERVAL: "100"
+    EVAL_INTERVAL: "1000"
+    CHECKPOINT_INTERVAL: "5000"
+    timeout: 36000
