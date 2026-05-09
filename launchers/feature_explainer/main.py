@@ -71,7 +71,34 @@ class Cfg:
     wandb_entity: Optional[str]
 
 
+def _load_dotenv_fallback() -> None:
+    """If OPENROUTER_API_KEY isn't already in env, try /workspace/project/.env.runpod.local
+    (Crucible scp's that file to the pod). Naive parser: skip blanks/comments, KEY=VAL."""
+    if os.environ.get("OPENROUTER_API_KEY") or os.environ.get("LLM_API_KEY"):
+        return
+    for candidate in (
+        Path("/workspace/project/.env.runpod.local"),
+        Path("/workspace/project/.env.local"),
+        Path("/workspace/project/.env"),
+    ):
+        if not candidate.exists():
+            continue
+        for line in candidate.read_text().splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            k = k.strip()
+            v = v.strip().strip('"').strip("'")
+            if k and v and k not in os.environ:
+                os.environ[k] = v
+        if os.environ.get("OPENROUTER_API_KEY") or os.environ.get("LLM_API_KEY"):
+            print(f"[env] loaded LLM key from {candidate}", flush=True)
+            return
+
+
 def load_cfg() -> Cfg:
+    _load_dotenv_fallback()
     api_key = (
         os.environ.get("OPENROUTER_API_KEY")
         or os.environ.get("LLM_API_KEY")
@@ -79,8 +106,11 @@ def load_cfg() -> Cfg:
     )
     if not api_key:
         raise RuntimeError(
-            "no LLM key — set OPENROUTER_API_KEY (or LLM_API_KEY) in env or "
-            ".env.runpod.local"
+            "no LLM key found. Set OPENROUTER_API_KEY in your shell env (so "
+            "Crucible's env_forward picks it up) OR add it to "
+            "~/.env.runpod.local on your local machine (Crucible scp's that "
+            "file to the pod at /workspace/project/.env.runpod.local). "
+            "Get a key at https://openrouter.ai/keys (~$5 covers a full pass)."
         )
     return Cfg(
         base_model=_env("BASE_MODEL"),
