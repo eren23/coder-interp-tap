@@ -189,6 +189,9 @@ def verbalize_all(cfg: Cfg, parquet_path: Path) -> list[str]:
     from transformers import AutoModelForCausalLM, AutoTokenizer
     import pyarrow.parquet as pq
 
+    table = pq.read_table(parquet_path)
+    activation_vectors = table.column("activation_vector").to_pylist()
+
     meta = load_meta(cfg.av_repo)
     inj_char = meta["tokens"]["injection_char"]
     inj_id = int(meta["tokens"]["injection_token_id"])
@@ -250,14 +253,13 @@ def verbalize_all(cfg: Cfg, parquet_path: Path) -> list[str]:
     embed_layer = av.get_input_embeddings()
     base_embeds = embed_layer(input_ids.unsqueeze(0))  # (1, T, d)
 
-    df = pq.read_table(parquet_path).to_pandas()
     descriptions: list[str] = []
 
     pad_id = av_tok.pad_token_id or av_tok.eos_token_id
 
     with torch.inference_mode():
-        for i, row in df.iterrows():
-            vec = torch.tensor(row["activation_vector"], dtype=torch.float32, device="cuda")
+        for i, vec_list in enumerate(activation_vectors):
+            vec = torch.tensor(vec_list, dtype=torch.float32, device="cuda")
             norm = vec.norm()
             if norm < 1e-6:
                 print(f"[av] zero-norm vector at row {i}; skipping", flush=True)
@@ -304,7 +306,13 @@ def log_to_wandb(
     import wandb
     import pyarrow.parquet as pq
 
-    df = pq.read_table(parquet_path).to_pandas()
+    table = pq.read_table(parquet_path)
+    prompt_idx_col = table.column("prompt_idx").to_pylist()
+    position_col = table.column("position").to_pylist()
+    token_text_col = table.column("token_text").to_pylist()
+    prompt_col = table.column("prompt").to_pylist()
+    n_rows = table.num_rows
+
     explanations = [extract_explanation(r) for r in raw_outputs]
 
     wandb.init(
@@ -331,20 +339,20 @@ def log_to_wandb(
         "av_explanation",
         "av_raw",
     ]
-    table = wandb.Table(columns=columns)
-    for i, row in df.iterrows():
+    wb_table = wandb.Table(columns=columns)
+    for i in range(n_rows):
         raw = raw_outputs[i] if i < len(raw_outputs) else ""
         explanation = explanations[i] if i < len(explanations) else ""
-        table.add_data(
+        wb_table.add_data(
             int(i),
-            int(row["prompt_idx"]),
-            int(row["position"]),
-            str(row["token_text"]),
-            str(row["prompt"]),
+            int(prompt_idx_col[i]),
+            int(position_col[i]),
+            str(token_text_col[i]),
+            str(prompt_col[i]),
             explanation,
             raw,
         )
-    wandb.log({"nla/verbalizations": table})
+    wandb.log({"nla/verbalizations": wb_table})
     wandb.log(
         {
             "nla/n_described": int(sum(1 for e in explanations if e.strip())),
