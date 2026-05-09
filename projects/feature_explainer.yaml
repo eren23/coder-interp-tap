@@ -1,0 +1,134 @@
+name: feature_explainer
+description: |
+  Auto-interpret SAE features by showing their top-firing contexts to a
+  capable LLM (any OpenAI-compatible API — defaults to DeepSeek V3 via
+  OpenRouter for cost). Produces a JSON of {feature_idx: description}
+  and a W&B Table of (idx, top_contexts, llm_description).
+
+  Pipeline:
+    1. Load a TopK SAE checkpoint (local /workspace/project/sae_final.pt
+       OR W&B artifact via SAE_WANDB_ARTIFACT env).
+    2. Load BASE_MODEL on cuda; stream tokens from DATASET_ID.
+    3. For each token: forward at SAE_LAYER, encode through SAE, track
+       top-K firing contexts per feature (heap keyed by activation
+       strength, value = ±CONTEXT_WINDOW tokens around the firing spot).
+    4. For features with >= MIN_CONTEXTS samples, batch-call the LLM:
+         "These contexts make this feature fire strongest. Describe in
+         15-25 words what concept/pattern this feature represents."
+       Async with concurrency LLM_CONCURRENCY (default 8).
+    5. Save JSON to /workspace/project/feature_descriptions.json and
+       log to W&B as a Table.
+
+  LLM provider — set via env (the launcher uses an OpenAI-compatible
+  client, so any compatible endpoint works):
+    - LLM_API_BASE        (default: https://openrouter.ai/api/v1)
+    - LLM_MODEL           (default: deepseek/deepseek-chat)
+    - OPENROUTER_API_KEY  (forwarded from local; or put in .env.runpod.local)
+
+  Cost estimates @ 24K features × ~600 tokens round-trip:
+    - DeepSeek V3 (OpenRouter):     ~$2
+    - Llama-3.3-70B (OpenRouter):   ~$8
+    - Qwen2.5-72B (OpenRouter):     ~$5
+    - Gemini-2.0-Flash (OpenRouter): ~$1
+    - Claude Sonnet (direct API):   ~$36
+    - GPT-4o-mini (OpenRouter):     ~$3
+
+  Variants:
+    - smoke  — 50 features, 100K tokens streamed, ~$0.01 + ~5 min
+    - pilot  — 500 features, 500K tokens, ~$0.05 + ~15 min
+    - full   — all 24,576 features, 5M tokens, ~$2-3 + ~60 min
+
+  Usage:
+    crucible run_project feature_explainer --variant smoke
+    crucible run_project feature_explainer --variant full
+
+repo: "https://github.com/eren23/coder-interp-tap"
+branch: main
+shallow: true
+workspace: "/workspace/project"
+
+pod:
+  gpu_type: "NVIDIA GeForce RTX 4090"
+  gpu_count: 1
+  container_disk: 40
+  volume_disk: 40
+  interruptible: true
+
+python: "3.10"
+
+install_torch: "torch>=2.5,<2.7"
+install_flags: "--index-url https://download.pytorch.org/whl/cu124"
+
+install:
+  - "transformers>=4.50"
+  - "accelerate>=0.30"
+  - "huggingface_hub"
+  - "wandb"
+  - "datasets>=2.18,<3.0"
+  - "httpx[http2]>=0.27"
+  - "orjson"
+
+train: >-
+  cd /workspace/project &&
+  python3 -u launchers/feature_explainer/main.py
+
+timeout: 7200
+
+env_forward:
+  - HUGGINGFACE_HUB_TOKEN
+  - WANDB_API_KEY
+  - OPENROUTER_API_KEY     # OpenRouter is not on Crucible's denylist; if it
+                           # ever is, put the key in .env.runpod.local instead.
+
+env_set:
+  PYTHONUNBUFFERED: "1"
+  HF_HUB_ENABLE_HF_TRANSFER: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  WANDB_PROJECT: "coder-interp-pilot"
+  WANDB_ENTITY: "eren23"
+  HF_HOME: "/workspace/project/.hf"
+  TRANSFORMERS_CACHE: "/workspace/project/.hf"
+  # Match the SAE we trained.
+  BASE_MODEL: "Qwen/Qwen2.5-Coder-1.5B"
+  SAE_LAYER: "6"
+  D_MODEL: "1536"
+  D_SAE: "24576"
+  TOPK: "50"
+  # SAE checkpoint source. If both local file exists and W&B artifact set,
+  # local file wins. Set SAE_WANDB_ARTIFACT to e.g. "sae-final:latest" to
+  # download from W&B when the local file isn't present.
+  SAE_LOCAL_PATH: "/workspace/project/sae_final.pt"
+  SAE_WANDB_ARTIFACT: "sae-final:latest"
+  # Top-context tracking
+  CONTEXT_WINDOW: "20"
+  TOP_CONTEXTS_PER_FEATURE: "10"
+  MIN_CONTEXTS: "3"
+  # Token streaming
+  DATASET_ID: "bigcode/commitpackft"
+  DATASET_SUBSET: "python"
+  SEQ_LEN: "512"
+  CAPTURE_BATCH_SIZE: "8"
+  # LLM
+  LLM_API_BASE: "https://openrouter.ai/api/v1"
+  LLM_MODEL: "deepseek/deepseek-chat"
+  LLM_CONCURRENCY: "8"
+  LLM_MAX_RETRIES: "3"
+  LLM_MAX_TOKENS: "80"
+  LLM_TEMPERATURE: "0.3"
+
+env_defaults:
+  WANDB_RUN_NAME: "feature-explainer-coder1.5b"
+
+variants:
+  smoke:
+    NUM_FEATURES_TO_EXPLAIN: "50"
+    NUM_TOKENS_TO_STREAM: "100000"
+    timeout: 1200
+  pilot:
+    NUM_FEATURES_TO_EXPLAIN: "500"
+    NUM_TOKENS_TO_STREAM: "500000"
+    timeout: 2400
+  full:
+    NUM_FEATURES_TO_EXPLAIN: "24576"
+    NUM_TOKENS_TO_STREAM: "5000000"
+    timeout: 7200
