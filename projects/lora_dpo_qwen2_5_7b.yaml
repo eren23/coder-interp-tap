@@ -1,0 +1,90 @@
+name: lora_dpo_qwen2_5_7b
+description: |
+  Track-B at production scale: LoRA + DPO on Qwen2.5-Coder-7B-Instruct.
+  Same launcher/recipe as lora_dpo_qwen2_5_coder_1_5b; the difference is
+  the base model size, the use of QLoRA (4-bit base) for memory, and
+  larger preference-pair dataset.
+
+  STATUS: launcher is a STUB — same caveat as the 1.5B sibling.
+  Real implementation goes in launchers/lora_dpo/main.py.
+
+  Variants: smoke / pilot / full — wall time scales ~5x vs 1.5B.
+
+  Usage:
+    crucible run_project lora_dpo_qwen2_5_7b --variant smoke
+
+repo: "https://github.com/eren23/coder-interp-tap"
+branch: main
+shallow: true
+workspace: "/workspace/project"
+
+pod:
+  # 7B + QLoRA base + adapter + grads + optimizer state ≈ 12-14GB on 4090
+  # with 4-bit base; comfortable. Bigger volume for HF cache.
+  gpu_type: "NVIDIA GeForce RTX 4090"
+  gpu_count: 1
+  container_disk: 50
+  volume_disk: 60
+  interruptible: true
+
+python: "3.10"
+
+install_torch: "torch>=2.5,<2.7"
+install_flags: "--index-url https://download.pytorch.org/whl/cu124"
+
+install:
+  - "transformers>=4.50"
+  - "accelerate>=0.30"
+  - "bitsandbytes>=0.43"
+  - "peft>=0.11"
+  - "trl>=0.9"
+  - "huggingface_hub"
+  - "wandb"
+  - "datasets>=2.18,<3.0"
+
+train: >-
+  cd /workspace/project &&
+  python3 -u launchers/lora_dpo/main.py
+
+timeout: 36000
+
+env_forward:
+  - HUGGINGFACE_HUB_TOKEN
+  - WANDB_API_KEY
+
+env_set:
+  PYTHONUNBUFFERED: "1"
+  HF_HUB_ENABLE_HF_TRANSFER: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  WANDB_PROJECT: "coder-interp-pilot"
+  WANDB_ENTITY: "eren23"
+  HF_HOME: "/workspace/project/.hf"
+  TRANSFORMERS_CACHE: "/workspace/project/.hf"
+  BASE_MODEL: "Qwen/Qwen2.5-Coder-7B-Instruct"
+  USE_4BIT_BASE: "1"
+  LORA_RANK: "16"
+  LORA_ALPHA: "32"
+  DPO_BETA: "0.1"
+  DPO_LR: "5e-5"
+  DPO_BATCH_SIZE: "1"
+  DPO_GRAD_ACCUM: "16"
+  DATASET_ID: "bigcode/commitpackft"
+  DATASET_SUBSET: "python"
+  N_PREFERENCE_PAIRS: "1000"
+
+env_defaults:
+  WANDB_RUN_NAME: "lora-dpo-coder7b"
+
+variants:
+  smoke:
+    DPO_TRAIN_STEPS: "10"
+    N_PREFERENCE_PAIRS: "100"
+    timeout: 1800
+  pilot:
+    DPO_TRAIN_STEPS: "200"
+    N_PREFERENCE_PAIRS: "500"
+    timeout: 14400
+  full:
+    DPO_TRAIN_STEPS: "1000"
+    N_PREFERENCE_PAIRS: "5000"
+    timeout: 36000

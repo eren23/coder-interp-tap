@@ -1,0 +1,91 @@
+name: lora_dpo_qwen2_5_coder_1_5b
+description: |
+  Track-B baseline at small scale: LoRA + DPO fine-tune of
+  Qwen2.5-Coder-1.5B on a small set of preference pairs. Uses synthetic
+  pairs derived from CommitPackFT (model_proposal vs ground_truth_commit)
+  if no preference logger output is available.
+
+  Pairs nicely with sae_train_qwen2_5_coder_1_5b: train the SAE first,
+  then LoRA-tune the same base, then run a feature-diff study via the
+  NLA pipeline (or the bespoke 5-metric eval) on baseline-vs-tuned.
+
+  STATUS: launcher is a STUB — pod plumbing works (provision, deps,
+  W&B init), but the actual TRL DPOTrainer call is not wired. Fill in
+  launchers/lora_dpo/main.py before relying on this for real training.
+
+  Variants: smoke / pilot / full — see the project YAML for step counts.
+
+  Usage:
+    crucible run_project lora_dpo_qwen2_5_coder_1_5b --variant smoke
+
+repo: "https://github.com/eren23/coder-interp-tap"
+branch: main
+shallow: true
+workspace: "/workspace/project"
+
+pod:
+  gpu_type: "NVIDIA GeForce RTX 4090"
+  gpu_count: 1
+  container_disk: 40
+  volume_disk: 40
+  interruptible: true
+
+python: "3.10"
+
+install_torch: "torch>=2.5,<2.7"
+install_flags: "--index-url https://download.pytorch.org/whl/cu124"
+
+install:
+  - "transformers>=4.50"
+  - "accelerate>=0.30"
+  - "bitsandbytes>=0.43"
+  - "peft>=0.11"
+  - "trl>=0.9"
+  - "huggingface_hub"
+  - "wandb"
+  - "datasets>=2.18,<3.0"
+
+train: >-
+  cd /workspace/project &&
+  python3 -u launchers/lora_dpo/main.py
+
+timeout: 14400
+
+env_forward:
+  - HUGGINGFACE_HUB_TOKEN
+  - WANDB_API_KEY
+
+env_set:
+  PYTHONUNBUFFERED: "1"
+  HF_HUB_ENABLE_HF_TRANSFER: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  WANDB_PROJECT: "coder-interp-pilot"
+  WANDB_ENTITY: "eren23"
+  HF_HOME: "/workspace/project/.hf"
+  TRANSFORMERS_CACHE: "/workspace/project/.hf"
+  BASE_MODEL: "Qwen/Qwen2.5-Coder-1.5B"
+  LORA_RANK: "8"
+  LORA_ALPHA: "16"
+  DPO_BETA: "0.1"
+  DPO_LR: "5e-5"
+  DPO_BATCH_SIZE: "4"
+  DPO_GRAD_ACCUM: "4"
+  DATASET_ID: "bigcode/commitpackft"
+  DATASET_SUBSET: "python"
+  N_PREFERENCE_PAIRS: "500"
+
+env_defaults:
+  WANDB_RUN_NAME: "lora-dpo-coder1.5b"
+
+variants:
+  smoke:
+    DPO_TRAIN_STEPS: "10"
+    timeout: 1200
+  pilot:
+    DPO_TRAIN_STEPS: "200"
+    N_PREFERENCE_PAIRS: "200"
+    timeout: 3600
+  full:
+    DPO_TRAIN_STEPS: "1000"
+    N_PREFERENCE_PAIRS: "2000"
+    timeout: 14400
