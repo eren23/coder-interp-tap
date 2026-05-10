@@ -557,6 +557,7 @@ def main() -> int:
     ]
     table = wandb.Table(columns=columns)
     print(f"[diff] top {cfg.top_k_features} features by |log-ratio|:", flush=True)
+    diff_rows_for_summary: list = []
     for i, idx in enumerate(top_idx):
         rb = float(rate_b[idx].item())
         rt = float(rate_t[idx].item())
@@ -566,6 +567,7 @@ def main() -> int:
         mt = float(mean_t[idx].item())
         desc = descriptions.get(idx, "")
         table.add_data(int(idx), rb, rt, lr_e, lr_2, mb, mt, desc)
+        diff_rows_for_summary.append((int(idx), lr_2, rb, rt, desc))
         if i < 25:
             arrow = "↑" if lr_e > 0 else "↓"
             print(
@@ -584,6 +586,30 @@ def main() -> int:
             "diff/p99_abs_log_ratio": float(log_ratio_abs.quantile(0.99).item()),
         }
     )
+
+    # Phase 6: LLM-explains-delta postprocess.
+    # See docs/llm-delta-summary.md.
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from summarize_delta import DiffRow, summarize_or_warn
+        rows = [
+            DiffRow(
+                feature_idx=fi,
+                log2_ratio=lr2,
+                rate_baseline=rb_,
+                rate_tuned=rt_,
+                description=ds,
+            )
+            for (fi, lr2, rb_, rt_, ds) in diff_rows_for_summary
+        ]
+        summary = summarize_or_warn(rows)
+        if summary:
+            wandb.run.notes = summary
+            wandb.summary["delta_summary"] = summary
+    except Exception as e:  # noqa: BLE001
+        print(f"[summarize] failed: {e!r}", flush=True)
+
     wandb.finish()
 
     print("[main] done", flush=True)
