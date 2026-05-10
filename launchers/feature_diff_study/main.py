@@ -188,9 +188,42 @@ def load_descriptions(cfg: Cfg) -> dict[int, str]:
 # ---------------------------------------------------------------------------
 
 
+# Files whose CONTENT is metadata, not author code. The LoRA shouldn't see
+# these — they bias the model toward "this person writes copyright headers."
+_BIAS_SKIP_FILENAMES = {
+    "license", "license.md", "license.txt",
+    "copying", "copying.md", "copying.txt",
+    "notice", "notice.md", "notice.txt",
+    "authors", "authors.md", "authors.txt", "contributors",
+    "manifest.in", "setup.py", "setup.cfg", "pyproject.toml",
+    ".gitignore", ".gitattributes", "makefile",
+}
+
+
+def _looks_like_metadata_file(path, content: str) -> bool:
+    """Return True if file is a license / boilerplate / metadata file that
+    should not enter the LoRA bias dataset.
+
+    Two checks: filename match, and 'Copyright' in the first 30 lines
+    (catches license-headered source files in repos with permissive licenses).
+    """
+    name = path.name.lower()
+    if name in _BIAS_SKIP_FILENAMES:
+        return True
+    head = "\n".join(content.splitlines()[:30]).lower()
+    if "copyright" in head and "all rights reserved" in head:
+        return True
+    if "spdx-license-identifier" in head:
+        return True
+    if "licensed under the apache" in head or "licensed under the mit" in head:
+        return True
+    return False
+
+
 def build_bias_dataset_from_github(cfg) -> list[str]:
     """Clone the user's public repos and sample files. Returns up to
     cfg.n_lora_examples (text, ...) chunks. Skips forks/archived/private.
+    Skips license / boilerplate files via _looks_like_metadata_file.
     """
     import json
     import shutil
@@ -237,6 +270,7 @@ def build_bias_dataset_from_github(cfg) -> list[str]:
             continue
 
         repo_added = 0
+        repo_skipped_metadata = 0
         for path in clone_dir.rglob("*"):
             if not path.is_file():
                 continue
@@ -246,12 +280,20 @@ def build_bias_dataset_from_github(cfg) -> list[str]:
                 content = path.read_text(errors="ignore")
             except Exception:
                 continue
-            if 100 <= len(content) <= 20000:
-                samples.append(content[: cfg.lora_max_seq_len * 4])
-                repo_added += 1
+            if not (100 <= len(content) <= 20000):
+                continue
+            if _looks_like_metadata_file(path, content):
+                repo_skipped_metadata += 1
+                continue
+            samples.append(content[: cfg.lora_max_seq_len * 4])
+            repo_added += 1
             if len(samples) >= cfg.n_lora_examples:
                 break
-        print(f"[data]   {name}: added {repo_added} files (total {len(samples)})", flush=True)
+        print(
+            f"[data]   {name}: added {repo_added} files "
+            f"(skipped {repo_skipped_metadata} metadata; total {len(samples)})",
+            flush=True,
+        )
 
         # Free disk
         shutil.rmtree(clone_dir, ignore_errors=True)
@@ -291,12 +333,24 @@ def build_bias_dataset(cfg: Cfg, tok):
 
     samples: list[str] = []
     scanned = 0
+    skipped_metadata = 0
     for sample in ds:
         scanned += 1
         text = sample.get("new_contents") or sample.get("content") or sample.get("text")
         if not text:
             continue
         if pattern is not None and not pattern.search(text):
+            continue
+        # Reject license-headered samples: they teach the model "this person
+        # writes copyright notices" instead of code style.
+        head = "\n".join(text.splitlines()[:30]).lower()
+        if (
+            ("copyright" in head and "all rights reserved" in head)
+            or "spdx-license-identifier" in head
+            or "licensed under the apache" in head
+            or "licensed under the mit" in head
+        ):
+            skipped_metadata += 1
             continue
         samples.append(text[: cfg.lora_max_seq_len * 4])  # rough char cap
         if len(samples) >= cfg.n_lora_examples:
@@ -306,7 +360,11 @@ def build_bias_dataset(cfg: Cfg, tok):
             print(f"[data] scan budget hit ({scanned}); kept {len(samples)} samples", flush=True)
             break
 
-    print(f"[data] gathered {len(samples)} bias examples (scanned {scanned})", flush=True)
+    print(
+        f"[data] gathered {len(samples)} bias examples "
+        f"(scanned {scanned}, skipped {skipped_metadata} license-headered)",
+        flush=True,
+    )
     return samples
 
 

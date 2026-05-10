@@ -192,14 +192,33 @@ def main() -> int:
         device_map="cuda",
     )
 
-    print(f"[ds] streaming {cfg.dataset_id}:{cfg.dataset_subset}", flush=True)
-    ds = load_dataset(
-        cfg.dataset_id,
-        cfg.dataset_subset,
-        streaming=True,
-        split="train",
-        trust_remote_code=True,
-    )
+    # Multi-subset support: DATASET_SUBSET="python,cpp,c" interleaves three
+    # subsets so the SAE sees a multi-language activation distribution. Use
+    # for training a coder SAE that needs to recognize C/C++ as well as
+    # Python (e.g. for ggerganov-style author delta studies).
+    subsets = [s.strip() for s in cfg.dataset_subset.split(",") if s.strip()]
+    print(f"[ds] streaming {cfg.dataset_id} subsets={subsets}", flush=True)
+    if len(subsets) == 1:
+        ds = load_dataset(
+            cfg.dataset_id,
+            subsets[0],
+            streaming=True,
+            split="train",
+            trust_remote_code=True,
+        )
+    else:
+        from datasets import interleave_datasets
+        sub_dss = [
+            load_dataset(
+                cfg.dataset_id,
+                s,
+                streaming=True,
+                split="train",
+                trust_remote_code=True,
+            )
+            for s in subsets
+        ]
+        ds = interleave_datasets(sub_dss, stopping_strategy="all_exhausted")
     ds_iter = iter(ds.shuffle(seed=42, buffer_size=1000))
 
     print(

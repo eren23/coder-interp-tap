@@ -1,0 +1,116 @@
+name: sae_train_qwen2_5_coder_1_5b_multilang
+description: |
+  Multi-language version of sae_train_qwen2_5_coder_1_5b. Trains the same
+  TopK SAE (d_sae=24576, k=50) on Qwen2.5-Coder-1.5B layer-6 residuals,
+  but streams activations from a MIXED corpus: python + cpp + c + javascript
+  + rust + go from bigcode/commitpackft, interleaved round-robin.
+
+  Why: the existing python-only SAE produces fictitious feature-diff
+  readouts for authors whose actual code is in C/C++/CUDA (e.g. ggerganov,
+  llama.cpp). With no C/C++ features in the dictionary, those LoRA
+  fine-tunes appear as "the model suppressed Python features" rather than
+  "the model emphasized X kernel pattern."
+
+  This project trains a multi-language SAE so the dictionary has
+  recognizable atoms for each major language. Same architecture, same
+  trainer, just a different activation distribution at training time.
+
+  Variants:
+    - smoke    — 50 steps, plumbing check
+    - pilot    — 2k steps, ~30-60 min, useful early-signal SAE
+    - full     — 20k steps, ~6-10h
+    - overnight — 100k steps, ~10h on A6000
+
+  Usage:
+    crucible run_project sae_train_qwen2_5_coder_1_5b_multilang --variant pilot
+
+repo: "https://github.com/eren23/coder-interp-tap"
+branch: main
+shallow: true
+workspace: "/workspace/project"
+
+pod:
+  # A6000 on-demand — same reasoning as sae_train_qwen2_5_coder_1_5b.yaml.
+  # 4090 inventory unstable in our region; A6000 lives in a different pool.
+  gpu_type: "NVIDIA RTX A6000"
+  gpu_count: 1
+  container_disk: 40
+  volume_disk: 40
+  interruptible: false
+
+python: "3.10"
+
+install_torch: "torch>=2.5,<2.7"
+install_flags: "--index-url https://download.pytorch.org/whl/cu124"
+
+install:
+  - "transformers>=4.50"
+  - "accelerate>=0.30"
+  - "huggingface_hub"
+  - "wandb"
+  - "datasets>=2.18,<3.0"
+
+train: >-
+  cd /workspace/project &&
+  python3 -u launchers/sae_train/main.py
+
+timeout: 36000
+
+env_forward:
+  - HUGGINGFACE_HUB_TOKEN
+  - WANDB_API_KEY
+
+env_set:
+  PYTHONUNBUFFERED: "1"
+  HF_HUB_ENABLE_HF_TRANSFER: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  WANDB_PROJECT: "coder-interp-pilot"
+  WANDB_ENTITY: "eren23"
+  HF_HOME: "/workspace/project/.hf"
+  TRANSFORMERS_CACHE: "/workspace/project/.hf"
+  BASE_MODEL: "Qwen/Qwen2.5-Coder-1.5B"
+  SAE_LAYER: "6"
+  D_MODEL: "1536"
+  D_SAE: "24576"
+  TOPK: "50"
+  SAE_LR: "3e-4"
+  SAE_AUX_LOSS_COEF: "0.01"   # match the new clean SAE recipe
+  SAE_BATCH_SIZE: "4096"
+  CAPTURE_BATCH_SIZE: "8"
+  SEQ_LEN: "512"
+  DATASET_ID: "bigcode/commitpackft"
+  # Multi-language: interleaved round-robin via datasets.interleave_datasets.
+  # Adjust the list per author profile if needed.
+  DATASET_SUBSET: "python,cpp,c,javascript,rust,go"
+  LOG_INTERVAL: "50"
+  EVAL_INTERVAL: "500"
+  CHECKPOINT_INTERVAL: "2500"
+
+env_defaults:
+  WANDB_RUN_NAME: "sae-coder1.5b-L6-multilang"
+
+variants:
+  smoke:
+    SAE_TRAIN_STEPS: "50"
+    LOG_INTERVAL: "10"
+    EVAL_INTERVAL: "25"
+    CHECKPOINT_INTERVAL: "0"
+    timeout: 1800
+  pilot:
+    SAE_TRAIN_STEPS: "2000"
+    LOG_INTERVAL: "20"
+    EVAL_INTERVAL: "200"
+    CHECKPOINT_INTERVAL: "1000"
+    timeout: 7200
+  full:
+    SAE_TRAIN_STEPS: "20000"
+    LOG_INTERVAL: "50"
+    EVAL_INTERVAL: "500"
+    CHECKPOINT_INTERVAL: "2500"
+    timeout: 36000
+  overnight:
+    SAE_TRAIN_STEPS: "100000"
+    LOG_INTERVAL: "100"
+    EVAL_INTERVAL: "1000"
+    CHECKPOINT_INTERVAL: "5000"
+    timeout: 36000
