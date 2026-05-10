@@ -172,6 +172,30 @@ We could. Two reasons to keep it as a postprocess:
 1. **Cheap retry.** If the prompt template needs tweaking, we re-run summarize on the existing W&B Table without re-running the GPU-hours of LoRA + activation capture.
 2. **Same script can compare multiple delta studies.** A second mode: take 5 different bias runs (random Python, PyTorch, Karpathy, ggerganov, eren23) and feed all 5 top-K tables to the LLM with prompt *"summarize each, then compare and contrast."* That's where the personal-style signal becomes legible.
 
+## Rare-event filter — what the LLM actually sees
+
+The raw top-K-by-|log2_ratio| view is dominated by **divide-by-near-zero
+outliers**: features that barely fired in baseline (rb≈0.0000) and a
+handful of times in tuned (rt≈0.0008). These produce log2 ratios of
++18 to +20 — *technically* a million-fold change, but only a handful of
+firings out of ~20K tokens. Letting them dominate the prompt mistakes
+"feature was introduced" for "feature was amplified by a million."
+
+The fix is a pre-LLM filter: keep only rows where **both** baseline and
+tuned fired at rate ≥ `DELTA_SUMMARY_MIN_RATE` (default `0.001`,
+i.e. ≥20 firings each in a 20K-token holdout). This surfaces the dense,
+genuinely-changed features instead of the rare-event tail.
+
+If filtering leaves fewer than `DELTA_SUMMARY_MIN_ROWS` (default 5)
+in either direction, the script falls back to the unfiltered ranking
+with a note in the prompt telling the LLM to read huge log2 values as
+"introduced/eliminated" rather than "amplified."
+
+Env var knobs:
+- `DELTA_SUMMARY_MIN_RATE` — minimum firing rate per side (default 0.001)
+- `DELTA_SUMMARY_MIN_ROWS` — minimum rows per direction before fallback (default 5)
+- `DELTA_SUMMARY_TOP_N` — how many UP and DOWN rows to keep after filter (default 30)
+
 ## Cost
 
 - Per single delta-study summary: ~60 rows × ~30 tokens each = ~1800 input tokens + ~300 output. DeepSeek V3 via OpenRouter at ~$0.0003/1k in / $0.001/1k out → **~$0.005**.

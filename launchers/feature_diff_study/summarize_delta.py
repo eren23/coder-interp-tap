@@ -37,6 +37,14 @@ class SummarizerCfg:
     temperature: float
     top_n_each_direction: int
     timeout_s: float
+    # Filter out rare-event-dominated rows: only keep features where BOTH
+    # baseline and tuned fired at least this fraction of the time. Stops the
+    # LLM prompt from being dominated by epsilon-divide log_ratio outliers
+    # (e.g. log2=+19 from rb=0.0000 -> rt=0.0008).
+    min_firing_rate: float
+    # If filtering leaves fewer than this many rows in either direction,
+    # fall back to the unfiltered ranking so the summary isn't empty.
+    min_rows_after_filter: int
 
 
 def _env(key: str, default: str | None = None) -> str:
@@ -87,10 +95,17 @@ def load_cfg() -> SummarizerCfg | None:
         temperature=float(os.environ.get("DELTA_SUMMARY_TEMPERATURE", "0.3")),
         top_n_each_direction=int(os.environ.get("DELTA_SUMMARY_TOP_N", "30")),
         timeout_s=float(os.environ.get("DELTA_SUMMARY_TIMEOUT_S", "120")),
+        min_firing_rate=float(os.environ.get("DELTA_SUMMARY_MIN_RATE", "0.001")),
+        min_rows_after_filter=int(os.environ.get("DELTA_SUMMARY_MIN_ROWS", "5")),
     )
 
 
-def build_prompt(rows_up: list[DiffRow], rows_down: list[DiffRow]) -> str:
+def build_prompt(
+    rows_up: list[DiffRow],
+    rows_down: list[DiffRow],
+    used_filter: bool = False,
+    min_rate: float = 0.0,
+) -> str:
     def fmt_row(r: DiffRow) -> str:
         sign = "+" if r.log2_ratio > 0 else ""
         desc = (r.description or "<no description>").replace("\n", " ")[:160]
@@ -102,9 +117,22 @@ def build_prompt(rows_up: list[DiffRow], rows_down: list[DiffRow]) -> str:
         "the base model already encoded. We measured the firing-rate change",
         "after fine-tuning. log2_ratio is log2(tuned_firing_rate / baseline_firing_rate).",
         "UP rows fire MORE in the tuned model. DOWN rows fire LESS.",
-        "",
-        f"UP after tune (top {len(rows_up)} by |log2_ratio|):",
+        "rb = firing rate in baseline model. rt = firing rate in tuned model.",
     ]
+    if used_filter:
+        lines.append(
+            f"Rows are filtered to features that fired in both models at rate >= {min_rate} "
+            f"(i.e. fired meaningfully in BOTH; rare-event divide-by-near-zero outliers excluded)."
+        )
+    else:
+        lines.append(
+            "Note: not enough dense-firing rows after the rare-event filter, so this "
+            "list includes some features that barely fired in one direction (very high "
+            "|log2_ratio| with rb or rt near 0). Treat huge log2 values as 'introduced' "
+            "or 'eliminated' rather than 'amplified by 1000x'."
+        )
+    lines.append("")
+    lines.append(f"UP after tune (top {len(rows_up)} by |log2_ratio|):")
     lines.extend(fmt_row(r) for r in rows_up)
     lines.append("")
     lines.append(f"DOWN after tune (top {len(rows_down)} by |log2_ratio|):")
@@ -132,11 +160,47 @@ def split_top_rows(
     return rows_up, rows_down
 
 
+def filter_rare_events(
+    rows: list[DiffRow], min_rate: float
+) -> list[DiffRow]:
+    """Keep only rows where both baseline and tuned fired meaningfully.
+
+    Stops the LLM prompt from being dominated by epsilon-divide log_ratio
+    outliers (e.g. log2=+19 because rb=0.0000 -> rt=0.0008, ~16 firings
+    out of 20K tokens).
+    """
+    return [r for r in rows if min(r.rate_baseline, r.rate_tuned) >= min_rate]
+
+
 def summarize(rows: list[DiffRow], cfg: SummarizerCfg) -> str:
-    rows_up, rows_down = split_top_rows(rows, cfg.top_n_each_direction)
+    # First try with the rare-event filter applied.
+    filtered = filter_rare_events(rows, cfg.min_firing_rate)
+    rows_up, rows_down = split_top_rows(filtered, cfg.top_n_each_direction)
+    used_filter = True
+    if (
+        len(rows_up) < cfg.min_rows_after_filter
+        or len(rows_down) < cfg.min_rows_after_filter
+    ):
+        # Fallback: not enough dense-firing features in this run, use the
+        # unfiltered ranking so the summary isn't empty.
+        print(
+            f"[summarize] rare-event filter (min_rate={cfg.min_firing_rate}) "
+            f"left only {len(rows_up)} UP / {len(rows_down)} DOWN rows; "
+            f"falling back to unfiltered ranking.",
+            flush=True,
+        )
+        rows_up, rows_down = split_top_rows(rows, cfg.top_n_each_direction)
+        used_filter = False
+    else:
+        print(
+            f"[summarize] rare-event filter kept {len(filtered)}/{len(rows)} rows "
+            f"(min_rate={cfg.min_firing_rate}); "
+            f"sending top {len(rows_up)} UP + {len(rows_down)} DOWN to LLM.",
+            flush=True,
+        )
     if not rows_up and not rows_down:
         return "<no drifted features to summarize>"
-    prompt = build_prompt(rows_up, rows_down)
+    prompt = build_prompt(rows_up, rows_down, used_filter, cfg.min_firing_rate)
     payload = {
         "model": cfg.model,
         "messages": [{"role": "user", "content": prompt}],
