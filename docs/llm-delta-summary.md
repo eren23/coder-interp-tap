@@ -178,6 +178,144 @@ We could. Two reasons to keep it as a postprocess:
 - Per cross-bias comparison (5 runs at once): ~9k in + ~1k out → **~$0.005**.
 - Negligible relative to the $1–3/run GPU cost of feature_diff_study.
 
+## Worked example — what we train on, what we detect
+
+Before the LLM-explains-delta layer can do anything, the upstream
+`feature_diff_study` has to actually *do* something to the model. Here's
+the concrete shape, with all model and dataset names spelled out so this
+section reads as a recipe.
+
+### The base model and the SAE we read it through
+
+```
+base model         : Qwen/Qwen2.5-Coder-1.5B           (HF, Apache 2.0)
+read at            : layer 6 residual stream            (1536-d float vectors)
+SAE                : custom TopK, k=50, W=24,576 features
+                     trained on bigcode/commitpackft (python slice)
+                     log_artifact: sae-final  (W&B coder-interp-pilot)
+feature names      : 24,532 of 24,576 features auto-named via
+                     deepseek/deepseek-chat (DeepSeek V3) on OpenRouter
+                     log_artifact: feature-descriptions
+LoRA adapter       : rank=8 alpha=16 lr=1e-4  (peft + transformers)
+delta-summary LLM  : deepseek/deepseek-chat (same)
+```
+
+### The four bias modes we actually run
+
+The launcher has one knob — `BIAS_*` env vars — and produces one of four
+training distributions. Same code path each time, just different inputs.
+
+#### 1. Random Python (the noise-floor / null baseline)
+```yaml
+overrides:
+  BIAS_FILTER_KEY:    "lang"
+  BIAS_FILTER_VALUE:  "python"     # bigcode/commitpackft 'python' subset
+  # no regex, no github user
+  N_LORA_EXAMPLES:    "500"
+  LORA_TRAIN_STEPS:   "500"
+```
+Trains on a uniform sample of CommitPackFT Python commits. Used as the
+"what does *any* fine-tune look like" baseline. Headline: median
+|log2_ratio|=0.033, ~2,400 features measurably changed.
+
+#### 2. PyTorch-bias regex (a tight stylistic slice)
+```yaml
+overrides:
+  BIAS_FILTER_VALUE:  "python"
+  BIAS_CONTENT_REGEX: "import torch|torch\\.|nn\\.Module|\\.cuda\\(\\)"
+```
+Same population, but only commits whose content matches the PyTorch regex.
+Detected: features for `pytorch.nn` imports, tensor reshape patterns,
+optimizer usage all rise; Java-style boilerplate features fall.
+
+#### 3. Cross-language holdout (a sanity-check on what features *are*)
+```yaml
+overrides:
+  BIAS_FILTER_VALUE:  "python"      # train bias on Python
+  HOLDOUT_LANG:       "rust"        # measure activations on Rust
+```
+Trains on Python, measures the diff on a Rust held-out stream. Confirms
+the SAE's "Python-import" features are language-specific (they
+don't fire on Rust). Headline: median |log2_ratio| ≈ 0.000 — the diff
+machinery isn't producing noise where it shouldn't.
+
+#### 4. Personal-codebase mode (the actual personalization signal)
+```yaml
+overrides:
+  BIAS_GITHUB_USER:        "karpathy"      # or ggerganov, eren23, ...
+  BIAS_GITHUB_EXTENSIONS:  ".py,.ts,.tsx,.js,.rs,.go,.md"
+```
+Skips CommitPackFT entirely. Clones the user's public repos
+(`build_bias_dataset_from_github` in `main.py`), samples files matching
+the extension list, trains LoRA on those. This is the mode that produces
+the per-author macro-bias readout — *"karpathy biases toward small clean
+training scripts and tensor manipulation"* vs *"ggerganov biases toward
+low-level C/CUDA kernels"*.
+
+The `BIAS_GITHUB_USER` mode is what the LLM-explains-delta layer is
+ultimately for: each author run produces one paragraph of English saying
+how that author's code shifted the model. Five author runs side-by-side
+gives the personalization-claim test in plain language.
+
+### What we detect, end to end
+
+```
+       train bias                            measure on holdout
+   ┌──────────────────┐                     ┌─────────────────────┐
+   │ commitpackft     │                     │ commitpackft        │
+   │  python  OR      │                     │  python (default)   │
+   │ regex slice      │  →  LoRA-SFT  →     │  OR rust (cross-    │
+   │  OR              │     (peft)          │      lang test)     │
+   │ github user repos│                     └──────────┬──────────┘
+   └──────────────────┘                                │
+                                                       ▼
+   ┌─────────────────┐         ┌────────────────┐   forward N tokens
+   │ baseline Qwen   │         │ tuned Qwen     │   through both
+   │ Coder-1.5B      │         │ (LoRA merged)  │
+   └────────┬────────┘         └────────┬───────┘
+            │                           │
+            └─────────  L6 residuals  ──┘
+                          │
+                          ▼
+                  ┌─────────────────┐
+                  │ frozen SAE      │  k=50 of 24,576
+                  └────────┬────────┘
+                           │
+                  per-feature firing rate (baseline, tuned)
+                           │
+                           ▼
+                  log2_ratio = log2(rate_tuned / rate_baseline)
+                           │
+                           ▼
+                  top-K by |log2_ratio| + named description
+                           │
+                           ▼
+                  W&B Table: rate_b, rate_t, log2_ratio, name
+                           │
+                           ▼
+                  summarize_delta.py  →  macro-bias paragraph
+                           │
+                           ▼
+                  wandb.run.notes
+```
+
+What we **detect** at each layer:
+- **Per-feature**: which named concepts (out of ~24K) the LoRA
+  amplified or suppressed.
+- **Aggregate**: how many features changed substantially
+  (`|log2_ratio| > 0.5`), the median and p99 of |log2_ratio| —
+  i.e. how *coherent* the bias is.
+- **Macro**: a 2-3 paragraph English readout of the style/domain shift.
+- **Cross-bias contrast**: same metrics produced for each author or
+  data slice, comparable side-by-side.
+
+What we **follow** across runs:
+- The four standard W&B metric panels (`diff/n_features_with_changes`,
+  `diff/median_abs_log_ratio`, `diff/p99_abs_log_ratio`,
+  `diff/baseline_tokens`).
+- The top-K table per run.
+- The new `wandb.summary["delta_summary"]` paragraph.
+
 ## What this enables
 
 Once `summarize_delta.py` ships:
