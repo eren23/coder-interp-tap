@@ -1,0 +1,122 @@
+name: feature_diff_study
+description: |
+  End-to-end feature-diff delta study — the first real demo of the
+  Track-C measurement pipeline.
+
+  Pipeline:
+    1. Load Qwen2.5-Coder-1.5B (baseline).
+    2. LoRA-SFT it on a small biased dataset (default: 100 commits from
+       a single CommitPackFT subset filtered by repo / style proxy).
+       This stands in for "real personalization signal" until kai-agent's
+       preference logger is producing real data.
+    3. Save the LoRA adapter.
+    4. Forward N held-out tokens through BOTH models (baseline and
+       merged-LoRA), capture L6 hidden states.
+    5. Apply the FROZEN pilot SAE to both activation streams.
+    6. Compute per-feature firing-rate delta:
+         firing_rate(tuned) / firing_rate(baseline)  →  log_ratio
+       Plus per-feature mean-activation drift.
+    7. Top-K features by |log_ratio| are cross-referenced with the
+       24K-name dictionary from the feature_descriptions artifact.
+    8. Output: W&B Table of (feature_idx, baseline_rate, tuned_rate,
+       log_ratio, mean_act_baseline, mean_act_tuned, llm_description).
+
+  This is the actual Track-C delta-study pipeline, end-to-end, on real
+  artifacts (real coder model, real SAE, real feature names).
+
+  Variants:
+    - smoke    — 5 features in dict, 1K tokens, 50 LoRA steps. ~$0.10, ~10 min.
+    - pilot    — 100 features in dict, 10K tokens, 200 LoRA steps. ~$0.30, ~25 min.
+    - full     — top 500 drifted features, 50K tokens, 500 LoRA steps. ~$0.60, ~90 min.
+
+  Usage:
+    crucible run_project feature_diff_study --variant pilot
+
+repo: "https://github.com/eren23/coder-interp-tap"
+branch: main
+shallow: true
+workspace: "/workspace/project"
+
+pod:
+  gpu_type: "NVIDIA GeForce RTX 4090"
+  gpu_count: 1
+  container_disk: 40
+  volume_disk: 40
+  interruptible: true
+
+python: "3.10"
+
+install_torch: "torch>=2.5,<2.7"
+install_flags: "--index-url https://download.pytorch.org/whl/cu124"
+
+install:
+  - "transformers>=4.50"
+  - "accelerate>=0.30"
+  - "peft>=0.11"
+  - "huggingface_hub"
+  - "wandb"
+  - "datasets>=2.18,<3.0"
+
+train: >-
+  cd /workspace/project &&
+  python3 -u launchers/feature_diff_study/main.py
+
+timeout: 7200
+
+env_forward:
+  - HUGGINGFACE_HUB_TOKEN
+  - WANDB_API_KEY
+
+env_set:
+  PYTHONUNBUFFERED: "1"
+  HF_HUB_ENABLE_HF_TRANSFER: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  WANDB_PROJECT: "coder-interp-pilot"
+  WANDB_ENTITY: "eren23"
+  HF_HOME: "/workspace/project/.hf"
+  TRANSFORMERS_CACHE: "/workspace/project/.hf"
+  # Frozen artifacts
+  BASE_MODEL: "Qwen/Qwen2.5-Coder-1.5B"
+  SAE_LAYER: "6"
+  D_MODEL: "1536"
+  D_SAE: "24576"
+  TOPK: "50"
+  SAE_WANDB_ARTIFACT: "sae-final:latest"
+  DESCRIPTIONS_WANDB_ARTIFACT: "feature-descriptions:latest"
+  # LoRA-SFT settings
+  LORA_RANK: "8"
+  LORA_ALPHA: "16"
+  LORA_LR: "1e-4"
+  LORA_BATCH_SIZE: "2"
+  LORA_GRAD_ACCUM: "4"
+  LORA_MAX_SEQ_LEN: "512"
+  # Bias the SFT dataset toward something — default: filter commitpackft
+  # to a single repo identifier. Override BIAS_FILTER_KEY/VALUE per run.
+  BIAS_FILTER_KEY: "lang"
+  BIAS_FILTER_VALUE: "Python"
+  # Held-out activation capture for diff
+  CAPTURE_BATCH_SIZE: "8"
+  SEQ_LEN: "512"
+
+env_defaults:
+  WANDB_RUN_NAME: "feature-diff-coder1.5b"
+
+variants:
+  smoke:
+    N_LORA_EXAMPLES: "10"
+    LORA_TRAIN_STEPS: "50"
+    HOLDOUT_TOKENS: "1000"
+    TOP_K_FEATURES: "5"
+    timeout: 1200
+  pilot:
+    N_LORA_EXAMPLES: "100"
+    LORA_TRAIN_STEPS: "200"
+    HOLDOUT_TOKENS: "10000"
+    TOP_K_FEATURES: "100"
+    timeout: 3600
+  full:
+    N_LORA_EXAMPLES: "500"
+    LORA_TRAIN_STEPS: "500"
+    HOLDOUT_TOKENS: "50000"
+    TOP_K_FEATURES: "500"
+    timeout: 7200
