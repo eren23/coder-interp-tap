@@ -55,6 +55,7 @@ class Cfg:
     lora_train_steps: int
     bias_filter_key: str
     bias_filter_value: str
+    holdout_lang: str
     holdout_tokens: int
     top_k_features: int
     capture_batch_size: int
@@ -86,6 +87,9 @@ def load_cfg() -> Cfg:
         lora_train_steps=int(_env("LORA_TRAIN_STEPS", "200")),
         bias_filter_key=_env("BIAS_FILTER_KEY", "lang"),
         bias_filter_value=_env("BIAS_FILTER_VALUE", "Python"),
+        # If unset, holdout_lang follows bias_filter_value (same-distribution).
+        # Set HOLDOUT_LANG explicitly for cross-language contrast (e.g. rust).
+        holdout_lang=os.environ.get("HOLDOUT_LANG") or _env("BIAS_FILTER_VALUE", "Python"),
         holdout_tokens=int(_env("HOLDOUT_TOKENS", "10000")),
         top_k_features=int(_env("TOP_K_FEATURES", "100")),
         capture_batch_size=int(_env("CAPTURE_BATCH_SIZE", "8")),
@@ -205,13 +209,16 @@ def build_bias_dataset(cfg: Cfg, tok):
     return samples
 
 
-def held_out_texts(cfg: Cfg, n: int) -> list[str]:
-    """Pull n texts NOT in the bias-filtered slice (use a different seed)."""
+def held_out_texts(cfg, n: int) -> list[str]:
+    """Pull n texts from the held-out language (defaults to bias lang for
+    same-distribution holdout; override with HOLDOUT_LANG env)."""
     from datasets import load_dataset
 
+    holdout_lang = cfg.holdout_lang.lower() if hasattr(cfg, "holdout_lang") else "python"
+    print(f"[holdout] streaming commitpackft lang={holdout_lang}", flush=True)
     ds = load_dataset(
         "bigcode/commitpackft",
-        "python",
+        holdout_lang,
         streaming=True,
         split="train",
         trust_remote_code=True,
