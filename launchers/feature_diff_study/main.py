@@ -55,6 +55,7 @@ class Cfg:
     lora_train_steps: int
     bias_filter_key: str
     bias_filter_value: str
+    bias_content_regex: str
     holdout_lang: str
     holdout_tokens: int
     top_k_features: int
@@ -87,6 +88,9 @@ def load_cfg() -> Cfg:
         lora_train_steps=int(_env("LORA_TRAIN_STEPS", "200")),
         bias_filter_key=_env("BIAS_FILTER_KEY", "lang"),
         bias_filter_value=_env("BIAS_FILTER_VALUE", "Python"),
+        # Optional regex applied to sample.new_contents/content to narrow the
+        # bias slice. E.g. r'\bimport torch\b' for ML, r'from django' for Django.
+        bias_content_regex=os.environ.get("BIAS_CONTENT_REGEX", ""),
         # If unset, holdout_lang follows bias_filter_value (same-distribution).
         # Set HOLDOUT_LANG explicitly for cross-language contrast (e.g. rust).
         holdout_lang=os.environ.get("HOLDOUT_LANG") or _env("BIAS_FILTER_VALUE", "Python"),
@@ -196,16 +200,29 @@ def build_bias_dataset(cfg: Cfg, tok):
         trust_remote_code=True,
     )
 
+    import re as _re
+    pattern = _re.compile(cfg.bias_content_regex) if cfg.bias_content_regex else None
+    if pattern is not None:
+        print(f"[data] filtering by regex: {cfg.bias_content_regex!r}", flush=True)
+
     samples: list[str] = []
+    scanned = 0
     for sample in ds:
+        scanned += 1
         text = sample.get("new_contents") or sample.get("content") or sample.get("text")
         if not text:
+            continue
+        if pattern is not None and not pattern.search(text):
             continue
         samples.append(text[: cfg.lora_max_seq_len * 4])  # rough char cap
         if len(samples) >= cfg.n_lora_examples:
             break
+        # Hard cap on scan budget for narrow regex matches.
+        if scanned > 100_000:
+            print(f"[data] scan budget hit ({scanned}); kept {len(samples)} samples", flush=True)
+            break
 
-    print(f"[data] gathered {len(samples)} bias examples", flush=True)
+    print(f"[data] gathered {len(samples)} bias examples (scanned {scanned})", flush=True)
     return samples
 
 
