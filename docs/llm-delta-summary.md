@@ -172,6 +172,21 @@ We could. Two reasons to keep it as a postprocess:
 1. **Cheap retry.** If the prompt template needs tweaking, we re-run summarize on the existing W&B Table without re-running the GPU-hours of LoRA + activation capture.
 2. **Same script can compare multiple delta studies.** A second mode: take 5 different bias runs (random Python, PyTorch, Karpathy, ggerganov, eren23) and feed all 5 top-K tables to the LLM with prompt *"summarize each, then compare and contrast."* That's where the personal-style signal becomes legible.
 
+## Two W&B tables — extreme vs dense-shifted
+
+`feature_diff_study/main.py` logs two parallel views of the same diff:
+
+| Table key | Ranking | Purpose |
+|---|---|---|
+| `diff/top_features` | top-K by `\|log2_ratio\|` | Extreme view — features that flipped on/off. Dominated by `rb=0` or `rt=0` (one-sided sparse). Useful for "what got introduced/eliminated." |
+| `diff/top_features_dense` | top-K by `min(rate_baseline, rate_tuned) × \|log2_ratio\|` | **What the LLM summarizer consumes.** Surfaces features that fired meaningfully in BOTH models AND shifted. The actual personalization signal. |
+
+The LLM-explains-delta postprocess uses `diff/top_features_dense`. The
+extreme table is kept for human inspection — sometimes "this feature
+went from 0 firings to 16 firings" is the interesting finding, but
+that's a different question than "what changed in the model's
+day-to-day behavior."
+
 ## Rare-event filter — what the LLM actually sees
 
 The raw top-K-by-|log2_ratio| view is dominated by **divide-by-near-zero

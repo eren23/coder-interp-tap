@@ -544,7 +544,19 @@ def main() -> int:
 
     top_idx = log_ratio_abs.topk(cfg.top_k_features).indices.cpu().tolist()
 
-    # Phase 5: log W&B Table.
+    # Dense-shift ranking: surface features that fired meaningfully in BOTH
+    # models AND shifted. Score = min(rate_baseline, rate_tuned) * |log2_ratio|.
+    # This is what the LLM summarizer should consume — top |log2_ratio| alone
+    # is dominated by epsilon-divide outliers (rb=0 or rt=0) that produce
+    # log2=+19 from a handful of firings out of 20K tokens.
+    log2_ratio_full = log_ratio / math.log(2)
+    rate_min = torch.minimum(rate_b, rate_t)
+    dense_score = rate_min * log_ratio_abs / math.log(2)
+    top_idx_dense = dense_score.topk(cfg.top_k_features).indices.cpu().tolist()
+
+    # Phase 5: log W&B Tables. Two tables:
+    #   diff/top_features        — top-K by |log2_ratio| (extreme; sparse-tail dominated)
+    #   diff/top_features_dense  — top-K by min-rate * |log2_ratio| (meaningful in both)
     columns = [
         "feature_idx",
         "rate_baseline",
@@ -555,28 +567,39 @@ def main() -> int:
         "mean_act_tuned",
         "description",
     ]
-    table = wandb.Table(columns=columns)
-    print(f"[diff] top {cfg.top_k_features} features by |log-ratio|:", flush=True)
-    diff_rows_for_summary: list = []
-    for i, idx in enumerate(top_idx):
-        rb = float(rate_b[idx].item())
-        rt = float(rate_t[idx].item())
-        lr_e = float(log_ratio[idx].item())
-        lr_2 = lr_e / math.log(2)
-        mb = float(mean_b[idx].item())
-        mt = float(mean_t[idx].item())
-        desc = descriptions.get(idx, "")
-        table.add_data(int(idx), rb, rt, lr_e, lr_2, mb, mt, desc)
-        diff_rows_for_summary.append((int(idx), lr_2, rb, rt, desc))
-        if i < 25:
-            arrow = "↑" if lr_e > 0 else "↓"
-            print(
-                f"  feat {idx:>5} {arrow} log2={lr_2:+.2f}  "
-                f"rb={rb:.4f} rt={rt:.4f}  desc: {desc[:120]}",
-                flush=True,
-            )
 
-    wandb.log({"diff/top_features": table})
+    def _build_table_and_rows(idx_list, label):
+        tbl = wandb.Table(columns=columns)
+        rows = []
+        print(f"[diff] {label} (showing first 25 of {len(idx_list)}):", flush=True)
+        for i, idx in enumerate(idx_list):
+            rb = float(rate_b[idx].item())
+            rt = float(rate_t[idx].item())
+            lr_e = float(log_ratio[idx].item())
+            lr_2 = lr_e / math.log(2)
+            mb = float(mean_b[idx].item())
+            mt = float(mean_t[idx].item())
+            desc = descriptions.get(idx, "")
+            tbl.add_data(int(idx), rb, rt, lr_e, lr_2, mb, mt, desc)
+            rows.append((int(idx), lr_2, rb, rt, desc))
+            if i < 25:
+                arrow = "↑" if lr_e > 0 else "↓"
+                print(
+                    f"  feat {idx:>5} {arrow} log2={lr_2:+.2f}  "
+                    f"rb={rb:.4f} rt={rt:.4f}  desc: {desc[:120]}",
+                    flush=True,
+                )
+        return tbl, rows
+
+    table, _ = _build_table_and_rows(top_idx, f"top {cfg.top_k_features} by |log-ratio|")
+    table_dense, dense_rows = _build_table_and_rows(
+        top_idx_dense, f"top {cfg.top_k_features} by min-rate * |log-ratio| (dense-shift)"
+    )
+    # Use the dense ranking for the LLM summarizer — those are the rows
+    # where the bias is real and the firing rate is non-trivial.
+    diff_rows_for_summary = dense_rows
+
+    wandb.log({"diff/top_features": table, "diff/top_features_dense": table_dense})
     wandb.log(
         {
             "diff/n_features_with_changes": int((log_ratio_abs > 0.5).sum().item()),
