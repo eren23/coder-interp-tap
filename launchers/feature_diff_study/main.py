@@ -178,13 +178,15 @@ def build_bias_dataset(cfg: Cfg, tok):
     """Stream commitpackft and pull N samples that match the bias filter."""
     from datasets import load_dataset
 
+    # commitpackft config names are lowercase ('python' not 'Python')
+    cfg_lang = cfg.bias_filter_value.lower()
     print(
-        f"[data] streaming commitpackft, filter {cfg.bias_filter_key}={cfg.bias_filter_value}",
+        f"[data] streaming commitpackft, filter {cfg.bias_filter_key}={cfg_lang}",
         flush=True,
     )
     ds = load_dataset(
         "bigcode/commitpackft",
-        cfg.bias_filter_value if cfg.bias_filter_key == "lang" else None,
+        cfg_lang if cfg.bias_filter_key == "lang" else None,
         streaming=True,
         split="train",
         trust_remote_code=True,
@@ -209,7 +211,7 @@ def held_out_texts(cfg: Cfg, n: int) -> list[str]:
 
     ds = load_dataset(
         "bigcode/commitpackft",
-        "Python",
+        "python",
         streaming=True,
         split="train",
         trust_remote_code=True,
