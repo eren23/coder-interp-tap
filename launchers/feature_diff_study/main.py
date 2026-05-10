@@ -56,6 +56,8 @@ class Cfg:
     bias_filter_key: str
     bias_filter_value: str
     bias_content_regex: str
+    bias_github_user: str
+    bias_github_extensions: str
     holdout_lang: str
     holdout_tokens: int
     top_k_features: int
@@ -91,6 +93,10 @@ def load_cfg() -> Cfg:
         # Optional regex applied to sample.new_contents/content to narrow the
         # bias slice. E.g. r'\bimport torch\b' for ML, r'from django' for Django.
         bias_content_regex=os.environ.get("BIAS_CONTENT_REGEX", ""),
+        # If set, ignore commitpackft and pull files from this GitHub user's
+        # public repos as the bias data. "Personal codebase" mode.
+        bias_github_user=os.environ.get("BIAS_GITHUB_USER", ""),
+        bias_github_extensions=os.environ.get("BIAS_GITHUB_EXTENSIONS", ".py,.ts,.tsx,.js,.rs,.go,.md"),
         # If unset, holdout_lang follows bias_filter_value (same-distribution).
         # Set HOLDOUT_LANG explicitly for cross-language contrast (e.g. rust).
         holdout_lang=os.environ.get("HOLDOUT_LANG") or _env("BIAS_FILTER_VALUE", "Python"),
@@ -182,8 +188,86 @@ def load_descriptions(cfg: Cfg) -> dict[int, str]:
 # ---------------------------------------------------------------------------
 
 
+def build_bias_dataset_from_github(cfg) -> list[str]:
+    """Clone the user's public repos and sample files. Returns up to
+    cfg.n_lora_examples (text, ...) chunks. Skips forks/archived/private.
+    """
+    import json
+    import shutil
+    import subprocess
+    import urllib.request
+    from pathlib import Path
+
+    user = cfg.bias_github_user
+    print(f"[data] github bias mode — fetching public repos for user={user!r}", flush=True)
+
+    repos_url = f"https://api.github.com/users/{user}/repos?per_page=100&type=owner&sort=updated"
+    headers = {"User-Agent": "coder-interp-tap/0.1"}
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("HUGGINGFACE_HUB_TOKEN")
+    # GH token is optional but lifts the unauth rate limit.
+    if token and token.startswith("github_pat_"):
+        headers["Authorization"] = f"Bearer {token}"
+    req = urllib.request.Request(repos_url, headers=headers)
+    with urllib.request.urlopen(req, timeout=30) as r:
+        repos = json.loads(r.read())
+
+    extensions = tuple(e.strip() for e in cfg.bias_github_extensions.split(","))
+    samples: list[str] = []
+    seen_repos = 0
+
+    for repo in repos:
+        if repo.get("fork") or repo.get("archived") or repo.get("private"):
+            continue
+        if repo.get("size", 0) > 200_000:  # skip massive repos (>200MB)
+            continue
+        seen_repos += 1
+        name = repo["name"]
+        clone_url = repo["clone_url"]
+        clone_dir = Path(f"/tmp/bias_{name}")
+        if clone_dir.exists():
+            shutil.rmtree(clone_dir, ignore_errors=True)
+        print(f"[data] cloning {name} ...", flush=True)
+        result = subprocess.run(
+            ["git", "clone", "--depth", "1", clone_url, str(clone_dir)],
+            capture_output=True,
+            timeout=120,
+        )
+        if result.returncode != 0:
+            print(f"[data]   clone failed: {result.stderr.decode()[:200]}", flush=True)
+            continue
+
+        repo_added = 0
+        for path in clone_dir.rglob("*"):
+            if not path.is_file():
+                continue
+            if not str(path).lower().endswith(extensions):
+                continue
+            try:
+                content = path.read_text(errors="ignore")
+            except Exception:
+                continue
+            if 100 <= len(content) <= 20000:
+                samples.append(content[: cfg.lora_max_seq_len * 4])
+                repo_added += 1
+            if len(samples) >= cfg.n_lora_examples:
+                break
+        print(f"[data]   {name}: added {repo_added} files (total {len(samples)})", flush=True)
+
+        # Free disk
+        shutil.rmtree(clone_dir, ignore_errors=True)
+        if len(samples) >= cfg.n_lora_examples:
+            break
+
+    print(f"[data] gathered {len(samples)} bias examples from {seen_repos} repos", flush=True)
+    return samples
+
+
 def build_bias_dataset(cfg: Cfg, tok):
-    """Stream commitpackft and pull N samples that match the bias filter."""
+    """Stream commitpackft and pull N samples that match the bias filter.
+    If BIAS_GITHUB_USER is set, fetch from GitHub instead (personal-codebase mode).
+    """
+    if cfg.bias_github_user:
+        return build_bias_dataset_from_github(cfg)
     from datasets import load_dataset
 
     # commitpackft config names are lowercase ('python' not 'Python')
