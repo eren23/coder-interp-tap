@@ -1,0 +1,105 @@
+name: vpd_v2_qwen3_0_6b
+description: |
+  Faithful re-implementation of Goodfire's VPD (adVersarial Parameter
+  Decomposition; https://www.goodfire.ai/research/interpreting-lm-parameters).
+
+  Scoped down from the paper (24 matrices across all layers + shared
+  transformer Gamma) to:
+    * a SINGLE transformer block of Qwen3-0.6B (7 matrices: q,k,v,o + SwiGLU)
+    * per-matrix small MLP Gamma instead of a shared transformer
+    * shorter training (1500 main steps + 400 warmup steps)
+
+  Implements ALL five losses faithfully:
+    L_adv-recon, L_stoch-recon, L_imp-min, L_freq-min, L_Delta-L2
+  with persistent-PGD adversarial inner loop, subset routing in the
+  stochastic loss, lower/upper-leaky hard sigmoids with STE, and Lp
+  annealing 2.0 -> 0.4.
+
+  Variants:
+    - smoke — 30 warmup + 50 main steps, ~10 min, validates plumbing
+    - pilot — 400 warmup + 1500 main, ~3-4h, real-signal pilot
+
+  Usage:
+    crucible run_project vpd_v2_qwen3_0_6b --variant pilot
+
+repo: "https://github.com/eren23/coder-interp-tap"
+branch: main
+shallow: true
+workspace: "/workspace/project"
+
+pod:
+  gpu_type: "NVIDIA RTX A6000"
+  gpu_count: 1
+  container_disk: 40
+  volume_disk: 40
+  interruptible: false
+
+python: "3.10"
+
+install_torch: "torch>=2.5,<2.7"
+install_flags: "--index-url https://download.pytorch.org/whl/cu124"
+
+install:
+  - "transformers>=4.50"
+  - "accelerate>=0.30"
+  - "huggingface_hub"
+  - "wandb"
+  - "datasets>=2.18,<3.0"
+
+train: >-
+  cd /workspace/project &&
+  python3 -u launchers/vpd_v2/main.py
+
+timeout: 18000
+
+env_forward:
+  - HUGGINGFACE_HUB_TOKEN
+  - WANDB_API_KEY
+
+env_set:
+  PYTHONUNBUFFERED: "1"
+  HF_HUB_ENABLE_HF_TRANSFER: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  WANDB_PROJECT: "coder-interp-pilot"
+  WANDB_ENTITY: "eren23"
+  HF_HOME: "/workspace/project/.hf"
+  TRANSFORMERS_CACHE: "/workspace/project/.hf"
+  BASE_MODEL: "Qwen/Qwen3-0.6B"
+  VPD_LAYER: "13"
+  VPD_TARGETS: "self_attn.q_proj,self_attn.k_proj,self_attn.v_proj,self_attn.o_proj,mlp.gate_proj,mlp.up_proj,mlp.down_proj"
+  VPD_NUM_COMPONENTS: "128"
+  VPD_GAMMA_HIDDEN: "256"
+  VPD_BATCH_SIZE: "4"
+  SEQ_LEN: "128"
+  VPD_LR_MAIN: "5e-5"
+  VPD_LR_ADV: "1e-2"
+  VPD_N_ADV: "3"
+  VPD_BETA_ADV: "0.5"
+  VPD_BETA_STOCH: "0.5"
+  VPD_BETA_IMP: "2e-4"
+  VPD_BETA_FREQ: "1e-4"
+  VPD_BETA_DELTA: "1e7"
+  VPD_P_INITIAL: "2.0"
+  VPD_P_FINAL: "0.4"
+  VPD_LEAKY_ALPHA: "0.01"
+  DATASET_ID: "bigcode/the-stack-smol"
+  DATASET_SPLIT: "train"
+  LOG_INTERVAL: "10"
+  CHECKPOINT_INTERVAL: "500"
+
+env_defaults:
+  WANDB_RUN_NAME: "vpd-v2-qwen3-0.6b-L13"
+
+variants:
+  smoke:
+    VPD_WARMUP_STEPS: "30"
+    VPD_TRAIN_STEPS: "50"
+    LOG_INTERVAL: "5"
+    CHECKPOINT_INTERVAL: "0"
+    timeout: 1800
+  pilot:
+    VPD_WARMUP_STEPS: "400"
+    VPD_TRAIN_STEPS: "1500"
+    LOG_INTERVAL: "10"
+    CHECKPOINT_INTERVAL: "500"
+    timeout: 18000
