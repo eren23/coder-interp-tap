@@ -82,7 +82,7 @@ env_set:
   VPD_P_INITIAL: "2.0"
   VPD_P_FINAL: "0.4"
   VPD_LEAKY_ALPHA: "0.01"
-  DATASET_ID: "bigcode/the-stack-smol"
+  DATASET_ID: "eren23/eren-code-style"
   DATASET_SPLIT: "train"
   LOG_INTERVAL: "10"
   CHECKPOINT_INTERVAL: "500"

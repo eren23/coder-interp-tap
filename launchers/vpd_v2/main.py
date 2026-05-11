@@ -129,7 +129,7 @@ def load_cfg() -> Cfg:
         leaky_alpha=float(_env("VPD_LEAKY_ALPHA", "0.01")),
         log_interval=int(_env("LOG_INTERVAL", "10")),
         checkpoint_interval=int(_env("CHECKPOINT_INTERVAL", "500")),
-        dataset_id=_env("DATASET_ID", "bigcode/the-stack-smol"),
+        dataset_id=_env("DATASET_ID", "eren23/eren-code-style"),
         dataset_split=_env("DATASET_SPLIT", "train"),
         workspace=Path(_env("WORKSPACE_DIR", "/workspace/project")),
         run_name=_env("WANDB_RUN_NAME", f"vpd-v2-{int(time.time())}"),
@@ -420,12 +420,10 @@ def frequency_minimality_loss(
 # Data utilities
 
 def streaming_text_iter(cfg: Cfg):
-    # The Stack smol has parquet files (no script), so it works with modern HF.
+    # Default: eren23/eren-code-style (public parquet). For other public
+    # datasets, pass DATASET_ID via env.
     ds = load_dataset(
-        cfg.dataset_id,
-        data_dir="data/python",
-        split=cfg.dataset_split,
-        streaming=True,
+        cfg.dataset_id, split=cfg.dataset_split, streaming=True,
     )
     return iter(ds.shuffle(seed=42, buffer_size=200))
 
