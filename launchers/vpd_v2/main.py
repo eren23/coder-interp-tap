@@ -202,13 +202,18 @@ class MaskedLinear(nn.Module):
             p.requires_grad_(False)
         self.original_weight = original.weight    # (d_out, d_in)  frozen
         self.original_bias = original.bias        # may be None
-        # Trainable rank-1 components.
-        # Init: small-Gaussian random (paper notes this is the actual init: U and V
-        # independent Gaussian).
+        # Trainable rank-1 components. Allocate on the same device as the
+        # original linear so we don't get cross-device errors when the model
+        # is already on cuda before VPDSystem is built.
+        dev = original.weight.device
         std_u = 1.0 / math.sqrt(self.d_out)
         std_v = 1.0 / math.sqrt(self.d_in)
-        self.U = nn.Parameter(torch.randn(self.d_out, num_components) * std_u)
-        self.V = nn.Parameter(torch.randn(self.d_in, num_components) * std_v)
+        self.U = nn.Parameter(
+            torch.randn(self.d_out, num_components, device=dev) * std_u
+        )
+        self.V = nn.Parameter(
+            torch.randn(self.d_in, num_components, device=dev) * std_v
+        )
         # Delta = W - sum U V^T  (kept exact at start; refined during warmup).
         with torch.no_grad():
             uv = self.U @ self.V.T
