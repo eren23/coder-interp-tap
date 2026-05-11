@@ -1,0 +1,87 @@
+name: analyze_vpd_v2_qwen3_0_6b
+description: |
+  Pod-side analysis of a trained VPD-v2 artifact. Produces four
+  visualizations in one W&B run:
+
+    (A) concept_cards    — top firing token contexts per alive component
+    (B) logit_lens       — top vocab tokens for U-vectors of matrices that
+                           write to the residual stream (mlp.down_proj,
+                           self_attn.o_proj)
+    (C) per_matrix_sparsity — bar plots of sorted mean gates per matrix
+    (D) coactivation     — Jaccard heatmap of alive components co-firing
+                           across matrices
+
+  Defaults to the run we just trained:
+    SOURCE_WANDB_RUN = eren23/coder-interp-pilot/2xehk87f
+    ARTIFACT_NAME    = vpd-v2-final
+
+  Variants:
+    - quick — 60 samples, ~5 min
+    - full  — 200 samples, ~15 min
+
+repo: "https://github.com/eren23/coder-interp-tap"
+branch: main
+shallow: true
+workspace: "/workspace/project"
+
+pod:
+  gpu_type: "NVIDIA RTX A6000"
+  gpu_count: 1
+  container_disk: 40
+  volume_disk: 40
+  interruptible: false
+
+python: "3.10"
+
+install_torch: "torch>=2.5,<2.7"
+install_flags: "--index-url https://download.pytorch.org/whl/cu124"
+
+install:
+  - "transformers>=4.50"
+  - "accelerate>=0.30"
+  - "huggingface_hub"
+  - "wandb"
+  - "datasets>=2.18,<3.0"
+  - "matplotlib"
+
+train: >-
+  cd /workspace/project &&
+  python3 -u launchers/analyze_vpd_v2_pod/main.py
+
+timeout: 3600
+
+env_forward:
+  - HUGGINGFACE_HUB_TOKEN
+  - WANDB_API_KEY
+
+env_set:
+  PYTHONUNBUFFERED: "1"
+  HF_HUB_ENABLE_HF_TRANSFER: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  WANDB_PROJECT: "coder-interp-pilot"
+  WANDB_ENTITY: "eren23"
+  HF_HOME: "/workspace/project/.hf"
+  TRANSFORMERS_CACHE: "/workspace/project/.hf"
+  BASE_MODEL: "Qwen/Qwen3-0.6B"
+  SOURCE_WANDB_RUN: "eren23/coder-interp-pilot/2xehk87f"
+  ARTIFACT_NAME: "vpd-v2-final"
+  DATASET_ID: "eren23/eren-code-style"
+  DATASET_SPLIT: "train"
+  CTX_WINDOW: "8"
+  GATE_THRESHOLD: "0.1"
+  ALIVE_THRESHOLD: "0.01"
+  TOP_K_CONTEXTS: "6"
+  TOP_K_VOCAB: "20"
+
+env_defaults:
+  WANDB_RUN_NAME: "vpd-v2-analysis"
+
+variants:
+  quick:
+    NUM_SAMPLES: "60"
+    SEQ_LEN: "128"
+    timeout: 1800
+  full:
+    NUM_SAMPLES: "200"
+    SEQ_LEN: "256"
+    timeout: 3600
