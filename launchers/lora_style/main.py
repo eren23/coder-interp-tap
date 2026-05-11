@@ -160,7 +160,9 @@ def main() -> int:
         save_total_limit=2,
         bf16=True,
         gradient_checkpointing=True,
-        max_seq_length=cfg.seq_len,
+        # TRL >= 0.13 renamed max_seq_length -> max_length; we use the new name
+        # since the project YAML pins trl>=0.12 which can resolve to 0.13+.
+        max_length=cfg.seq_len,
         packing=True,
         report_to=["wandb"],
         run_name=cfg.run_name,
