@@ -1,0 +1,86 @@
+name: analyze_sae_qwen2_5_coder_1_5b
+description: |
+  Pod-side SAE interpretability analysis. Downloads sae-final from
+  W&B (run u20xk1jx) and the user's eren-code-style HF dataset,
+  computes per-feature fire rates on real tokens, picks the top-N
+  most-active features, and logs (feature, fire_rate, activation,
+  repo, path, context) to a W&B Table — plus fire-rate and activity
+  plots.
+
+  This is the pod counterpart of scripts/analyze_sae.py (which kept
+  hanging on local MPS / CPU model load).
+
+  Variants:
+    - quick — 50 samples, 64 tokens/sample, 8 features, ~5 min
+    - full  — 200 samples, 256 tokens, 16 features, ~25 min
+
+  Usage:
+    crucible run_project analyze_sae_qwen2_5_coder_1_5b --variant full
+
+repo: "https://github.com/eren23/coder-interp-tap"
+branch: main
+shallow: true
+workspace: "/workspace/project"
+
+pod:
+  gpu_type: "NVIDIA RTX A6000"
+  gpu_count: 1
+  container_disk: 40
+  volume_disk: 40
+  interruptible: false
+
+python: "3.10"
+
+install_torch: "torch>=2.5,<2.7"
+install_flags: "--index-url https://download.pytorch.org/whl/cu124"
+
+install:
+  - "transformers>=4.50"
+  - "accelerate>=0.30"
+  - "huggingface_hub"
+  - "wandb"
+  - "datasets>=2.18,<3.0"
+  - "matplotlib"
+
+train: >-
+  cd /workspace/project &&
+  python3 -u launchers/analyze_sae_pod/main.py
+
+timeout: 5400
+
+env_forward:
+  - HUGGINGFACE_HUB_TOKEN
+  - WANDB_API_KEY
+
+env_set:
+  PYTHONUNBUFFERED: "1"
+  HF_HUB_ENABLE_HF_TRANSFER: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  WANDB_PROJECT: "coder-interp-pilot"
+  WANDB_ENTITY: "eren23"
+  HF_HOME: "/workspace/project/.hf"
+  TRANSFORMERS_CACHE: "/workspace/project/.hf"
+  BASE_MODEL: "Qwen/Qwen2.5-Coder-1.5B"
+  SAE_LAYER: "6"
+  SOURCE_WANDB_RUN: "eren23/coder-interp-pilot/u20xk1jx"
+  ARTIFACT_NAME: "sae-final"
+  DATASET_ID: "eren23/eren-code-style"
+  DATASET_SPLIT: "train"
+  CONTEXT_WINDOW: "10"
+
+env_defaults:
+  WANDB_RUN_NAME: "sae-analysis-coder1.5b"
+
+variants:
+  quick:
+    NUM_SAMPLES: "50"
+    SEQ_LEN: "64"
+    NUM_FEATURES: "8"
+    TOP_K_CONTEXTS: "5"
+    timeout: 1800
+  full:
+    NUM_SAMPLES: "200"
+    SEQ_LEN: "256"
+    NUM_FEATURES: "16"
+    TOP_K_CONTEXTS: "8"
+    timeout: 5400
