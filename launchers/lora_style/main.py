@@ -173,7 +173,8 @@ def main() -> int:
         model=model,
         args=sft_cfg,
         train_dataset=ds,
-        tokenizer=tok,
+        # TRL >= 0.13 renamed `tokenizer` -> `processing_class`.
+        processing_class=tok,
     )
 
     print("[train] starting SFT", flush=True)
