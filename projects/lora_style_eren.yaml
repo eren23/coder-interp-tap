@@ -26,14 +26,14 @@ shallow: true
 workspace: "/workspace/project"
 
 pod:
-  # 4090 spot is fine for a 1.5B + LoRA workload — adapter fits easily,
-  # no need for A6000-grade VRAM. If spot evictions become a problem,
-  # bump to A6000 on-demand like the SAE project does.
-  gpu_type: "NVIDIA GeForce RTX 4090"
+  # Tried 4090 spot first — pool failed to allocate (state stuck at
+  # "stopped"). A6000 on-demand is the same per-hour price ($0.33) and
+  # is the proven config for this repo's SAE/training projects.
+  gpu_type: "NVIDIA RTX A6000"
   gpu_count: 1
   container_disk: 40
   volume_disk: 40
-  interruptible: true
+  interruptible: false
 
 python: "3.10"
 

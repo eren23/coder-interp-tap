@@ -29,11 +29,13 @@ shallow: true
 workspace: "/workspace/project"
 
 pod:
-  gpu_type: "NVIDIA GeForce RTX 4090"
+  # 4090 spot pool failed to allocate (state stuck at "stopped"); switched
+  # to A6000 on-demand which the SAE project also uses successfully.
+  gpu_type: "NVIDIA RTX A6000"
   gpu_count: 1
   container_disk: 40
   volume_disk: 40
-  interruptible: true
+  interruptible: false
 
 python: "3.10"
 
