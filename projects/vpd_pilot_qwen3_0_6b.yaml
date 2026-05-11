@@ -1,0 +1,104 @@
+name: vpd_pilot_qwen3_0_6b
+description: |
+  Goodfire-style VPD (adVersarial Parameter Decomposition) pilot on a
+  SINGLE weight matrix of Qwen3-0.6B. The point is feasibility + cost:
+  we want a real $/h number for parameter-level decomposition so we
+  can decide whether scaling it to the Qwen2.5-Coder-1.5B SAE+NLA
+  pipeline is worth the budget.
+
+  Faithful to the paper EXCEPT we drop the adversarial-reconstruction
+  inner loop and only optimize 4 of the 5 losses (recon + stochastic
+  recon + importance minimality + decomposition L2). The pilot's job
+  is to verify that gates collapse to a sparse alive set on real-LM
+  activations and to get a clock.
+
+  Target: layer 13 (middle of Qwen3-0.6B's 28 layers), mlp.up_proj.
+  C = 128 rank-1 components.
+
+  Variants:
+    - smoke  — 50 steps, ~2 min, plumbing check
+    - pilot  — 1000 steps, ~30-60 min, real signal
+    - long   — 3000 steps, ~1.5-2h, converged
+
+  Usage:
+    crucible run_project vpd_pilot_qwen3_0_6b --variant pilot
+
+repo: "https://github.com/eren23/coder-interp-tap"
+branch: main
+shallow: true
+workspace: "/workspace/project"
+
+pod:
+  gpu_type: "NVIDIA GeForce RTX 4090"
+  gpu_count: 1
+  container_disk: 40
+  volume_disk: 40
+  interruptible: true
+
+python: "3.10"
+
+install_torch: "torch>=2.5,<2.7"
+install_flags: "--index-url https://download.pytorch.org/whl/cu124"
+
+install:
+  - "transformers>=4.50"
+  - "accelerate>=0.30"
+  - "huggingface_hub"
+  - "wandb"
+  - "datasets>=2.18,<3.0"
+
+train: >-
+  cd /workspace/project &&
+  python3 -u launchers/vpd_pilot/main.py
+
+timeout: 10800
+
+env_forward:
+  - HUGGINGFACE_HUB_TOKEN
+  - WANDB_API_KEY
+
+env_set:
+  PYTHONUNBUFFERED: "1"
+  HF_HUB_ENABLE_HF_TRANSFER: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  WANDB_PROJECT: "coder-interp-pilot"
+  WANDB_ENTITY: "eren23"
+  HF_HOME: "/workspace/project/.hf"
+  TRANSFORMERS_CACHE: "/workspace/project/.hf"
+  BASE_MODEL: "Qwen/Qwen3-0.6B"
+  VPD_LAYER: "13"
+  VPD_TARGET: "mlp.up_proj"
+  VPD_NUM_COMPONENTS: "128"
+  VPD_IMPORTANCE_HIDDEN: "256"
+  VPD_LR: "3e-4"
+  VPD_BATCH_SIZE: "2048"
+  CAPTURE_BATCH_SIZE: "8"
+  SEQ_LEN: "512"
+  VPD_LAMBDA_RECON: "1.0"
+  VPD_LAMBDA_STOCH: "1.0"
+  VPD_LAMBDA_IMPORTANCE: "0.01"
+  VPD_LAMBDA_DECOMP: "0.1"
+  DATASET_ID: "bigcode/commitpackft"
+  DATASET_SUBSET: "python"
+  LOG_INTERVAL: "20"
+  CHECKPOINT_INTERVAL: "500"
+
+env_defaults:
+  WANDB_RUN_NAME: "vpd-qwen3-0.6b-L13-up_proj"
+
+variants:
+  smoke:
+    VPD_TRAIN_STEPS: "50"
+    LOG_INTERVAL: "10"
+    CHECKPOINT_INTERVAL: "0"
+    timeout: 1200
+  pilot:
+    VPD_TRAIN_STEPS: "1000"
+    LOG_INTERVAL: "20"
+    CHECKPOINT_INTERVAL: "500"
+    timeout: 5400
+  long:
+    VPD_TRAIN_STEPS: "3000"
+    LOG_INTERVAL: "50"
+    CHECKPOINT_INTERVAL: "1000"
+    timeout: 10800

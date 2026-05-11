@@ -1,0 +1,97 @@
+name: lora_style_eren
+description: |
+  Personal-style LoRA SFT on Qwen2.5-Coder-1.5B over a corpus of the
+  user's top-20 GitHub repos (Python / TS / Rust / Go).
+
+  Pairs with the sae-final:latest SAE trained by
+  sae_train_qwen2_5_coder_1_5b (wandb run u20xk1jx) — once the LoRA is
+  trained, plug it into feature_diff_study to find the SAE features
+  that shift most when generating in the user's style.
+
+  Prerequisite: HF dataset eren23/eren-code-style must exist. Build it
+  locally first via:
+    python3 scripts/build_eren_style_corpus.py
+
+  Variants:
+    - smoke  — 20 steps, ~3 min, validates plumbing
+    - pilot  — 200 steps, ~25 min, signal but not converged
+    - full   — 3 epochs over the full corpus, ~2-3h, the real run
+
+  Usage:
+    crucible run_project lora_style_eren --variant full
+
+repo: "https://github.com/eren23/coder-interp-tap"
+branch: main
+shallow: true
+workspace: "/workspace/project"
+
+pod:
+  # 4090 spot is fine for a 1.5B + LoRA workload — adapter fits easily,
+  # no need for A6000-grade VRAM. If spot evictions become a problem,
+  # bump to A6000 on-demand like the SAE project does.
+  gpu_type: "NVIDIA GeForce RTX 4090"
+  gpu_count: 1
+  container_disk: 40
+  volume_disk: 40
+  interruptible: true
+
+python: "3.10"
+
+install_torch: "torch>=2.5,<2.7"
+install_flags: "--index-url https://download.pytorch.org/whl/cu124"
+
+install:
+  - "transformers>=4.50"
+  - "accelerate>=0.30"
+  - "peft>=0.11"
+  - "trl>=0.12"
+  - "huggingface_hub"
+  - "wandb"
+  - "datasets>=2.18,<3.0"
+
+train: >-
+  cd /workspace/project &&
+  python3 -u launchers/lora_style/main.py
+
+timeout: 14400
+
+env_forward:
+  - HUGGINGFACE_HUB_TOKEN
+  - WANDB_API_KEY
+
+env_set:
+  PYTHONUNBUFFERED: "1"
+  HF_HUB_ENABLE_HF_TRANSFER: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  WANDB_PROJECT: "coder-interp-pilot"
+  WANDB_ENTITY: "eren23"
+  HF_HOME: "/workspace/project/.hf"
+  TRANSFORMERS_CACHE: "/workspace/project/.hf"
+  BASE_MODEL: "Qwen/Qwen2.5-Coder-1.5B"
+  DATASET_ID: "eren23/eren-code-style"
+  DATASET_SPLIT: "train"
+  LORA_RANK: "32"
+  LORA_ALPHA: "64"
+  LORA_DROPOUT: "0.05"
+  LR: "2e-4"
+  BATCH_SIZE: "2"
+  GRAD_ACCUM: "8"
+  WARMUP_STEPS: "50"
+  SEQ_LEN: "1024"
+
+env_defaults:
+  WANDB_RUN_NAME: "lora-style-eren-1.5b"
+
+variants:
+  smoke:
+    MAX_STEPS: "20"
+    EPOCHS: "1"
+    timeout: 1200
+  pilot:
+    MAX_STEPS: "200"
+    EPOCHS: "1"
+    timeout: 3600
+  full:
+    MAX_STEPS: "-1"
+    EPOCHS: "3"
+    timeout: 14400
