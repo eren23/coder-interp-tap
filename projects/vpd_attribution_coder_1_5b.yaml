@@ -1,0 +1,72 @@
+name: vpd_attribution_coder_1_5b
+description: |
+  Load all 8 vpd-v2-final sweep checkpoints (layers 0/4/8/12/16/20/24/27) at
+  once and run integrated-gradients attribution on a handful of demo prompts.
+  Two variants: BASE Coder-1.5B (SKIP_LORA_MERGE=1) and LoRA-merged.
+
+  Outputs one JSON per (prompt, mode) capturing alive components, per-token
+  signed attribution, and adjacent-layer edges. Bundled into the
+  `attribution-graphs-{base,lora}` W&B artifact for the article's
+  multi-layer attribution-graph widget.
+
+repo: "https://github.com/eren23/coder-interp-tap"
+branch: main
+shallow: true
+workspace: "/workspace/project"
+
+pod:
+  gpu_type: "NVIDIA RTX A6000"
+  gpu_count: 1
+  container_disk: 50
+  volume_disk: 50
+  interruptible: false
+
+python: "3.10"
+
+install_torch: "torch>=2.5,<2.7"
+install_flags: "--index-url https://download.pytorch.org/whl/cu124"
+
+install:
+  - "transformers>=4.50"
+  - "accelerate>=0.30"
+  - "peft>=0.11"
+  - "huggingface_hub"
+  - "wandb"
+
+train: >-
+  cd /workspace/project &&
+  python3 -u launchers/vpd_attribution/main.py
+
+timeout: 7200
+
+env_forward:
+  - HUGGINGFACE_HUB_TOKEN
+  - WANDB_API_KEY
+
+env_set:
+  PYTHONUNBUFFERED: "1"
+  HF_HUB_ENABLE_HF_TRANSFER: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  WANDB_PROJECT: "coder-interp-pilot"
+  WANDB_ENTITY: "eren23"
+  HF_HOME: "/workspace/project/.hf"
+  TRANSFORMERS_CACHE: "/workspace/project/.hf"
+  BASE_MODEL: "Qwen/Qwen2.5-Coder-1.5B"
+  LORA_WANDB_RUN: "eren23/coder-interp-pilot/niiz0d0u"
+  LORA_ARTIFACT: "lora-style-final"
+  IG_STEPS: "16"
+  MAX_SEQ: "32"
+  TOP_K_EDGES: "4"
+  OUT_DIR: "/workspace/project/attribution_out"
+
+env_defaults:
+  SKIP_LORA_MERGE: "0"
+  WANDB_RUN_NAME: "vpd-attribution"
+
+variants:
+  base:
+    SKIP_LORA_MERGE: "1"
+    WANDB_RUN_NAME: "vpd-attribution-base"
+  lora:
+    SKIP_LORA_MERGE: "0"
+    WANDB_RUN_NAME: "vpd-attribution-lora"
