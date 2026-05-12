@@ -1,0 +1,103 @@
+name: vpd_lora_qwen2_5_coder_1_5b
+description: |
+  VPD applied to the LoRA-merged Qwen2.5-Coder-1.5B — answer the
+  product question "which subcomponents did my personal-style LoRA
+  actually use?" by running the full Goodfire-style VPD recipe on
+  (base + LoRA-style-final). The merged W is decomposed and the
+  causal-importance gates pick out the alive components on the
+  user's own corpus.
+
+  Defaults pull lora-style-final from coder-interp-pilot/niiz0d0u.
+
+  We drop `mlp.gate_proj` from the targeted matrices because the
+  SwiGLU-drop ablation showed it actively hurts faithfulness on
+  Qwen-family architectures.
+
+  Variants:
+    - smoke — 30 warmup + 50 main steps, ~12 min
+    - pilot — 400 warmup + 1500 main steps, ~3-4h
+
+repo: "https://github.com/eren23/coder-interp-tap"
+branch: main
+shallow: true
+workspace: "/workspace/project"
+
+pod:
+  gpu_type: "NVIDIA RTX A6000"
+  gpu_count: 1
+  container_disk: 40
+  volume_disk: 40
+  interruptible: false
+
+python: "3.10"
+
+install_torch: "torch>=2.5,<2.7"
+install_flags: "--index-url https://download.pytorch.org/whl/cu124"
+
+install:
+  - "transformers>=4.50"
+  - "accelerate>=0.30"
+  - "peft>=0.11"
+  - "huggingface_hub"
+  - "wandb"
+  - "datasets>=2.18,<3.0"
+
+train: >-
+  cd /workspace/project &&
+  python3 -u launchers/vpd_lora/main.py
+
+timeout: 18000
+
+env_forward:
+  - HUGGINGFACE_HUB_TOKEN
+  - WANDB_API_KEY
+
+env_set:
+  PYTHONUNBUFFERED: "1"
+  HF_HUB_ENABLE_HF_TRANSFER: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  WANDB_PROJECT: "coder-interp-pilot"
+  WANDB_ENTITY: "eren23"
+  HF_HOME: "/workspace/project/.hf"
+  TRANSFORMERS_CACHE: "/workspace/project/.hf"
+  BASE_MODEL: "Qwen/Qwen2.5-Coder-1.5B"
+  LORA_WANDB_RUN: "eren23/coder-interp-pilot/niiz0d0u"
+  LORA_ARTIFACT: "lora-style-final"
+  VPD_LAYER: "13"
+  VPD_TARGETS: "self_attn.q_proj,self_attn.k_proj,self_attn.v_proj,self_attn.o_proj,mlp.up_proj,mlp.down_proj"
+  VPD_NUM_COMPONENTS: "128"
+  VPD_GAMMA_HIDDEN: "256"
+  VPD_BATCH_SIZE: "2"
+  SEQ_LEN: "128"
+  VPD_LR_MAIN: "5e-5"
+  VPD_LR_ADV: "1e-2"
+  VPD_N_ADV: "3"
+  VPD_BETA_ADV: "0.5"
+  VPD_BETA_STOCH: "0.5"
+  VPD_BETA_IMP: "2e-4"
+  VPD_BETA_FREQ: "1e-4"
+  VPD_BETA_DELTA: "1e7"
+  VPD_P_INITIAL: "2.0"
+  VPD_P_FINAL: "0.4"
+  VPD_LEAKY_ALPHA: "0.01"
+  DATASET_ID: "eren23/eren-code-style"
+  DATASET_SPLIT: "train"
+  LOG_INTERVAL: "10"
+  CHECKPOINT_INTERVAL: "500"
+
+env_defaults:
+  WANDB_RUN_NAME: "vpd-lora-coder1.5b"
+
+variants:
+  smoke:
+    VPD_WARMUP_STEPS: "30"
+    VPD_TRAIN_STEPS: "50"
+    LOG_INTERVAL: "5"
+    CHECKPOINT_INTERVAL: "0"
+    timeout: 2400
+  pilot:
+    VPD_WARMUP_STEPS: "400"
+    VPD_TRAIN_STEPS: "1500"
+    LOG_INTERVAL: "10"
+    CHECKPOINT_INTERVAL: "500"
+    timeout: 18000
