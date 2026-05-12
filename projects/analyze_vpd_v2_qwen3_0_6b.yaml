@@ -43,6 +43,7 @@ install:
   - "wandb"
   - "datasets>=2.18,<3.0"
   - "matplotlib"
+  - "httpx>=0.27"
 
 train: >-
   cd /workspace/project &&
@@ -53,6 +54,7 @@ timeout: 3600
 env_forward:
   - HUGGINGFACE_HUB_TOKEN
   - WANDB_API_KEY
+  - OPENROUTER_API_KEY
 
 env_set:
   PYTHONUNBUFFERED: "1"
@@ -72,6 +74,12 @@ env_set:
   ALIVE_THRESHOLD: "1e-6"
   TOP_K_CONTEXTS: "6"
   TOP_K_VOCAB: "20"
+  # New (E)+(F): LLM auto-interp labels per component + per-prompt heatmaps
+  ENABLE_LLM_AUTOINTERP: "1"
+  ENABLE_DEMO_HEATMAPS: "1"
+  LLM_API_BASE: "https://openrouter.ai/api/v1"
+  LLM_MODEL: "deepseek/deepseek-chat"
+  LLM_CONCURRENCY: "6"
 
 env_defaults:
   WANDB_RUN_NAME: "vpd-v2-analysis"
