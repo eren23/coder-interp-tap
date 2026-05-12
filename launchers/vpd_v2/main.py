@@ -576,7 +576,10 @@ def outer_step(
         + cfg.beta_imp * l_imp
         + cfg.beta_freq * l_freq
         # Delta-L2 only in warmup phase; tiny coefficient outside it
-        + 1e-3 * decomp
+        # BUGFIX: was hardcoded 1e-3 — paper uses beta_delta=1e7 throughout
+        # to keep Delta tight and force structure into U V^T. Without this the
+        # decomposition is degenerate (Delta carries everything, U V is ~0).
+        + cfg.beta_delta * decomp
     )
     main_opt.zero_grad()
     loss.backward()
