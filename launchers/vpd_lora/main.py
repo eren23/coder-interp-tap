@@ -663,24 +663,32 @@ def main() -> int:
         cfg.base_model, torch_dtype=torch.bfloat16, device_map="cuda",
     )
 
-    # Download LoRA adapter from W&B and merge into the base.
-    lora_run = os.environ.get("LORA_WANDB_RUN", "eren23/coder-interp-pilot/niiz0d0u")
-    lora_art_name = os.environ.get("LORA_ARTIFACT", "lora-style-final")
-    print(f"[lora] downloading {lora_art_name} from {lora_run}", flush=True)
-    api = wandb.Api()
-    src_run = api.run(lora_run)
-    arts = [a for a in src_run.logged_artifacts() if a.name.startswith(lora_art_name)]
-    if not arts:
-        raise RuntimeError(f"no LoRA artifact starting with {lora_art_name} on {lora_run}")
-    adapter_dir = cfg.workspace / "lora_adapter_dl"
-    adapter_dir.mkdir(parents=True, exist_ok=True)
-    arts[-1].download(root=str(adapter_dir))
+    # SKIP_LORA_MERGE=1 lets us reuse this launcher to sweep VPD over the BASE
+    # model (no fine-tune merged). Default is to merge the personal-style LoRA.
+    skip_lora = os.environ.get("SKIP_LORA_MERGE", "0") == "1"
+    if skip_lora:
+        print("[lora] SKIP_LORA_MERGE=1 — training VPD on the BASE model only",
+              flush=True)
+        model = base
+    else:
+        # Download LoRA adapter from W&B and merge into the base.
+        lora_run = os.environ.get("LORA_WANDB_RUN", "eren23/coder-interp-pilot/niiz0d0u")
+        lora_art_name = os.environ.get("LORA_ARTIFACT", "lora-style-final")
+        print(f"[lora] downloading {lora_art_name} from {lora_run}", flush=True)
+        api = wandb.Api()
+        src_run = api.run(lora_run)
+        arts = [a for a in src_run.logged_artifacts() if a.name.startswith(lora_art_name)]
+        if not arts:
+            raise RuntimeError(f"no LoRA artifact starting with {lora_art_name} on {lora_run}")
+        adapter_dir = cfg.workspace / "lora_adapter_dl"
+        adapter_dir.mkdir(parents=True, exist_ok=True)
+        arts[-1].download(root=str(adapter_dir))
 
-    from peft import PeftModel
-    print(f"[lora] attaching adapter from {adapter_dir}", flush=True)
-    peft_model = PeftModel.from_pretrained(base, str(adapter_dir))
-    print("[lora] merging adapter into base weights", flush=True)
-    model = peft_model.merge_and_unload()
+        from peft import PeftModel
+        print(f"[lora] attaching adapter from {adapter_dir}", flush=True)
+        peft_model = PeftModel.from_pretrained(base, str(adapter_dir))
+        print("[lora] merging adapter into base weights", flush=True)
+        model = peft_model.merge_and_unload()
 
     model.train(False)
     for p in model.parameters():
