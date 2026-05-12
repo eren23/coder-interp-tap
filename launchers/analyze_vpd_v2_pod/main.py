@@ -98,7 +98,9 @@ def load_cfg() -> Cfg:
         num_samples=int(_env("NUM_SAMPLES", "120")),
         seq_len=int(_env("SEQ_LEN", "128")),
         gate_threshold=float(_env("GATE_THRESHOLD", "0.1")),
-        alive_threshold=float(_env("ALIVE_THRESHOLD", "0.01")),
+        # Trainer uses 1e-6 to flag alive components. Match it; the previous
+        # 0.01 default was 10000x too strict and zeroed out every alive list.
+        alive_threshold=float(_env("ALIVE_THRESHOLD", "1e-6")),
         top_k_contexts=int(_env("TOP_K_CONTEXTS", "6")),
         top_k_vocab=int(_env("TOP_K_VOCAB", "20")),
         ctx_window=int(_env("CTX_WINDOW", "8")),
