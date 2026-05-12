@@ -285,8 +285,9 @@ def integrated_gradient_attribution(
     # Final attribution = (mean grad along path) * g_op
     attribution: dict[str, torch.Tensor] = {}
     for k in vpd.keys:
-        mean_grad = accum[k] / n_steps  # (T, C)
-        attribution[k] = (mean_grad * g_op[k].detach().float().squeeze(0))
+        mean_grad = (accum[k] / n_steps).squeeze(0)            # (T, C)
+        g_squeezed = g_op[k].detach().float().squeeze(0)        # (T, C)
+        attribution[k] = mean_grad * g_squeezed                 # (T, C)
     return attribution, {k: g_op[k].detach().float().squeeze(0) for k in vpd.keys}
 
 
