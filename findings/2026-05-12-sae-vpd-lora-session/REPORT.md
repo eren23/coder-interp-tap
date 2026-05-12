@@ -2,7 +2,7 @@
 
 **Date**: 2026-05-11 → 2026-05-12
 **Author**: Claude (with Eren driving)
-**Total compute**: ≈ $2.20 (A6000 on-demand pods)
+**Total compute**: ≈ **$5** all-in (A6000 on-demand pods + DeepSeek-V3 autointerp)
 **W&B project**: [eren23/coder-interp-pilot](https://wandb.ai/eren23/coder-interp-pilot)
 
 ---
@@ -20,9 +20,32 @@ existing `feature_diff_study` pipeline, which surfaced concrete bias signal
 (open-source license boilerplate, FSF address tokens, Django metadata) with
 DeepSeek-V3 NLA labels.
 
-Six W&B runs document the full chain end-to-end. Three orchestration crons
-ran the overnight pipeline (LoRA → destroy pod → provision feature_diff_study
-→ run → destroy) with zero manual intervention.
+### Confirmed VPD findings (replicated across multiple runs)
+- **K/V "import-circuit"**: 5 components each in `self_attn.k_proj` and
+  `self_attn.v_proj` of layer 13 fire saturated on `import` / `#!/` / `///`
+  tokens, with cross-matrix Jaccard coactivation 0.34–0.39. Replicates in
+  base Qwen3-0.6B, base Coder-1.5B, and LoRA-merged Coder-1.5B.
+- **MLP lexical detectors** (after fixing the `beta_delta` bug):
+  `mlp.down_proj` components labeled cleanly as Python docstring opener
+  (`"""`), Python `__future__` imports, Python shebang `/env`;
+  `mlp.up_proj` Rust `#[derive]`. Before the fix these labels were vague
+  "punctuation fragments" — the bug was suppressing real structure.
+
+### Honest negative findings
+- **Naive VPD (no adversarial loss) fails to sparsify** — gates stuck at ~1.
+  Differential proof that the adversary is the active ingredient.
+- **The "LoRA encodes Rust circuits" claim is largely a CORPUS artifact**.
+  Running VPD on the same Coder-1.5B WITHOUT the LoRA on the same corpus
+  surfaces nearly the same "Rust pub use ::" labels. LoRA quantitatively
+  reorganizes attention (more alive components, higher adversary error) but
+  does NOT introduce qualitatively new concept categories at layer 13.
+
+### Process
+15 W&B runs document the full pipeline (SAE → SAE-autointerp → naive VPD →
+faithful VPD → ablation sweep → analysis viz → LLM autointerp → confidence
+tests). Multiple chained crons ran a fully autonomous overnight pipeline
+(LoRA → feature_diff_study, with auto-provision / bootstrap / run / destroy).
+Two bugs caught and fixed mid-session by reading the data, not the code.
 
 ---
 
@@ -98,23 +121,40 @@ ran the overnight pipeline (LoRA → destroy pod → provision feature_diff_stud
   because they're "more polysemantic" or because the per-matrix Γ instead of
   the paper's shared transformer Γ underconstrains them.
 
-### 5. VPD-v2 4-viz analysis
-- **W&B**: [`5rlz2q0a`](https://wandb.ai/eren23/coder-interp-pilot/runs/5rlz2q0a)
-  (first attempt, empty tables due to threshold bug) and a re-run with the fix
-  (pending at report time).
+### 5. VPD-v2 4-viz analysis  + LLM autointerp
+- **W&B (final, with LLM labels)**: [`gze67ldu`](https://wandb.ai/eren23/coder-interp-pilot/runs/gze67ldu)
 - **Spec**: `launchers/analyze_vpd_v2_pod/main.py`, `projects/analyze_vpd_v2_qwen3_0_6b.yaml`
-- **Visualizations** (one W&B run, four artifacts):
-  - **A. concept_cards**: per-matrix × component × top firing token contexts.
-  - **B. logit_lens**: top vocab tokens for `U[:,c]` of residual-writing
-    matrices (mlp.down_proj, self_attn.o_proj). Decodes each rank-1
-    component's *output direction* through the LM head.
-  - **C. sparsity bars**: per-matrix bar plot of sorted mean gates.
-  - **D. coactivation heatmap**: 7×7 Jaccard of alive components across pairs
-    of matrices — looks for emergent cross-matrix circuits.
-- **Result excerpt**: first run had a threshold bug (alive_threshold=0.01 vs
-  trainer's 1e-6) → tables empty. Plots (sparsity, coactivation) were fine.
-  Fix in commit `c2d77a2`; re-run in flight.
-- **Verdict** (post-fix): TBD.
+- **Visualizations** (one W&B run):
+  - **A. concept_cards**: per-matrix × component × top firing token contexts
+  - **B. logit_lens**: top vocab tokens for `U[:,c]` of residual-writing matrices
+  - **C. sparsity bars** per matrix
+  - **D. cross-matrix coactivation Jaccard heatmap**
+  - **E. NEW — `concept_labels`**: DeepSeek-V3 generated one-sentence concept name per alive component (179 labels)
+  - **F. NEW — `demo/<prompt>` heatmaps**: 6 demo code prompts, gate-magnitude heatmaps over (alive_components × tokens)
+- **Two bugs found + fixed during analysis**:
+  1. `alive_threshold` was 0.01 (vs trainer's 1e-6) — produced empty tables. Fixed in `c2d77a2`.
+  2. `beta_delta` was hardcoded to 1e-3 in the main loop (vs paper's 1e7 throughout). Let Δ drift, leaving `UVᵀ ≈ 0` — gates were controlling an empty subspace. Fixed in `7a689a6`.
+- **Verdict**: ✅ post-fix this is the headline interpretability win. Clear single-concept components in K/V (import keyword, shebang, doc-comment markers), and after the β_Δ fix the MLP signal sharpens dramatically (Python `"""` docstring opener, Python `__future__` import, Rust `#[derive]`).
+
+### 5b. Confidence tests (post bug-fixes)
+After flagging that the "LoRA Rust shift" was potentially corpus-induced, we ran two control experiments to settle the open questions.
+
+**(i) β_Δ fix on Qwen3-0.6B** — [W&B run](https://wandb.ai/eren23/coder-interp-pilot/runs/onx7hjjh)
+- Same config (C=32, no gate_proj) but with `beta_delta=1e7` throughout instead of buggy 1e-3 in main loop.
+- MLP labels became dramatically sharper:
+  - `mlp.down_proj` #30 → *"Python `__future__` imports for annotations"*
+  - `mlp.down_proj` #0, #23 → *"Python docstring opening quotes `"""`"*
+  - `mlp.down_proj` #9, #19 → *"Python shebang `/env` path"*
+  - `mlp.up_proj` #24 → *"Python `__future__` module"*
+  - `mlp.up_proj` #18 → *"Rust `#[derive]` attribute"*
+- Verdict: ✅ **bug was suppressing real MLP structure**. MLPs at this scale DO carry interpretable single-concept components when `UVᵀ` is forced to do the work instead of `Δ`.
+
+**(ii) BASE Coder-1.5B (no LoRA) control** — [W&B run](https://wandb.ai/eren23/coder-interp-pilot/runs/2zcsew0x)
+- VPD on Qwen2.5-Coder-1.5B without the LoRA merged, same C=32 no-gate config, same corpus.
+- Compare alive component labels with vpd-lora run [`jfjid9o6`](https://wandb.ai/eren23/coder-interp-pilot/runs/jfjid9o6).
+- Result: **the "Rust shift" claim partially BUSTED.** The BASE model ALREADY has alive components labeled *"the keyword `use` in Rust import statements"*, *"Rust programming language keywords and imports"*, *"importing or declaring dependencies in Rust code"*. The Rust circuits are mostly in the base model's pre-trained weights + amplified by the Rust-heavy corpus, NOT introduced by the LoRA.
+- What IS different in LoRA-merged vs base: more alive components (k=15 vs 10, v=23 vs 18), higher adversary error (0.27 vs 0.08) → LoRA reorganized attention to use more entangled structure, but did NOT introduce new conceptual categories.
+- Verdict: 🟡 **honest finding** — LoRA quantitatively perturbs attention but doesn't qualitatively add new concept detectors. The corpus drives the "Rust pub use ::" labels, not the fine-tune.
 
 ### 6. Personal-style LoRA — Qwen2.5-Coder-1.5B + user's top 20 GitHub repos
 - **W&B**: [`niiz0d0u`](https://wandb.ai/eren23/coder-interp-pilot/runs/niiz0d0u)
@@ -188,22 +228,38 @@ ran the overnight pipeline (LoRA → destroy pod → provision feature_diff_stud
 6. **Crons are session-only**. Closing this Claude window kills all monitors.
    For longer-running fleet, durable cron / a separate orchestrator process is
    needed.
+7. **`destroy_nodes` by name can leave RunPod zombies**: false alarm in our case
+   (a stale console refresh), but next time verify with `pod_ids`-based destroy
+   after a name-based call.
+8. **VPD `beta_delta` must be ≥ 1e7 in main loop too**, not just warmup. With a
+   tiny `1e-3` coefficient in main, the decomposition becomes degenerate:
+   `decomp_residual` stays at 0 because Δ is happy to drift to `Δ ≈ W`, leaving
+   `UVᵀ ≈ 0`. Gates then "control" an effectively empty subspace. Fix: paper-
+   style `beta_delta=1e7` everywhere.
+9. **Auto-interpretation LLMs confabulate at low gate magnitudes**. Components
+   with `mean_g ≈ 10⁻⁵` are essentially noise; asking DeepSeek "what concept
+   do these tokens share?" still produces a confident answer. Only labels with
+   `mean_g ≥ ~10⁻⁴` are trustworthy. Trust strength of evidence, not the label.
+10. **Corpus-vs-LoRA confound**: if the LoRA dataset has the same biases as
+    the analysis corpus, you can't distinguish "LoRA learned X" from "corpus
+    surfaces X in base too". Always run the base-control on the same corpus.
 
 ---
 
 ## What's next
 
-1. **Run `feature_diff_study` against `lora-style-final`** instead of the
-   built-in Python-bias LoRA. This is the real "what does my style change in
-   feature space" experiment. ~$0.20, ~25 min.
-2. **Re-run VPD-v2 with the trainer's true threshold** (in flight at time of
-   writing) — produces non-empty concept_cards + logit_lens tables and lets
-   us actually inspect what the 4-88 alive components per matrix mean.
-3. **Stronger VPD-v2**: longer training (paper does 400k steps; we did 1.5k +
-   400 warmup). Shared transformer Γ instead of per-matrix MLP. Apply to all
+1. **Stronger VPD-v2 at scale**: longer training (paper does 400k steps; we did
+   up to 15k). Shared transformer Γ instead of per-matrix MLP. Apply to all
    layers, not just layer 13.
-4. **Downstream "lens" CLI**: per-file style-match score using the feature-diff
+2. **Ablation validation**: mask the "alive" components and measure logit drift.
+   If they're truly load-bearing, masking should hurt; if our threshold is loose,
+   it won't. This is the gold-standard test we haven't done yet.
+3. **Downstream "lens" CLI**: per-file style-match score using the feature-diff
    delta vector + LoRA — the actual end-user app sketched at session start.
+4. **Better LoRA target**: instead of a personal-style LoRA (whose biases overlap
+   with the analysis corpus), try a LoRA trained on a DIFFERENT distribution
+   (e.g., math-bench) and analyze on code corpus. The disjoint distributions
+   would let VPD cleanly attribute differences to the LoRA.
 
 ---
 
@@ -220,8 +276,31 @@ All commits on `eren23/coder-interp-tap@main`:
 - `846c53b` — pod-side SAE analysis launcher
 - `f2923be` — pod-side VPD-v2 analysis launcher
 - `c2d77a2` — VPD-v2 analysis alive_threshold fix
+- `913c2d3` — LLM autointerp + per-prompt heatmaps for analyze_vpd_v2_pod
+- `7a689a6` — `beta_delta` bugfix in vpd_v2 main loop
 
 HF artifacts:
 - Dataset `eren23/eren-code-style` (public, 23.6 MB parquet, 6,374 rows)
+
+W&B runs (eren23/coder-interp-pilot):
+| run | name |
+|---|---|
+| `u20xk1jx` | SAE training (sae-final, 24K features) |
+| `ade7o3va` | SAE feature top-context analysis |
+| `2xehk87f` | VPD-v2 pilot baseline (C=128) |
+| `o8ixp4cq` | VPD-v2 C=32+noGate (winning config) |
+| `at2weoo4` | VPD-v2 scale-15k |
+| `kdblndko` | VPD-v2 Coder-1.5B BASE control |
+| `m6nftt9r` | VPD-v2 Qwen3-0.6B β_Δ bugfix |
+| `niiz0d0u` | LoRA style SFT (lora-style-final, 159 MB) |
+| `pghxvjh2` | VPD on LoRA-merged Coder-1.5B |
+| `xm7jwp61` | VPD-v2 4-viz analysis (baseline) |
+| `gze67ldu` | Rich-viz analysis with LLM labels (C=32 winner) |
+| `jfjid9o6` | Rich-viz analysis with LLM labels (vpd-lora) |
+| `2zcsew0x` | Rich-viz analysis (Coder-1.5B base control) |
+| `onx7hjjh` | Rich-viz analysis (β_Δ-fixed Qwen3) |
+| `l8g7e3dy` | feature_diff_study pilot |
+
+Total compute: ≈ $4 of A6000 on-demand pod time + ≈ $1 of OpenRouter DeepSeek-V3 calls for autointerp. All-in: ~$5, well under the $10 budget originally set.
 
 ---
