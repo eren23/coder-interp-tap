@@ -1,0 +1,311 @@
+{
+  "project": "eren23/coder-interp-pilot",
+  "layers": [
+    0,
+    4,
+    8,
+    12,
+    16,
+    20,
+    24,
+    27
+  ],
+  "matrices": [
+    "self_attn_q_proj",
+    "self_attn_k_proj",
+    "self_attn_v_proj",
+    "self_attn_o_proj",
+    "mlp_up_proj",
+    "mlp_down_proj"
+  ],
+  "runs": [
+    {
+      "run_id": "tv0p4dr8",
+      "name": "vpd-sweep-base-L0",
+      "layer": 0,
+      "mode": "base",
+      "wandb_artifact": "eren23/coder-interp-pilot/vpd-v2-final:v13",
+      "alive": {
+        "mlp_down_proj": 4,
+        "mlp_up_proj": 2,
+        "self_attn_k_proj": 3,
+        "self_attn_o_proj": 11,
+        "self_attn_q_proj": 3,
+        "self_attn_v_proj": 32
+      },
+      "final_loss_total": 0.023101605474948883,
+      "adv_logits_l1": 0.2342917174100876,
+      "mean_g": 0.02275899052619934
+    },
+    {
+      "run_id": "vpbhnnxw",
+      "name": "vpd-sweep-base-L4",
+      "layer": 4,
+      "mode": "base",
+      "wandb_artifact": "eren23/coder-interp-pilot/vpd-v2-final:v16",
+      "alive": {
+        "mlp_down_proj": 6,
+        "mlp_up_proj": 2,
+        "self_attn_k_proj": 9,
+        "self_attn_o_proj": 7,
+        "self_attn_q_proj": 0,
+        "self_attn_v_proj": 20
+      },
+      "final_loss_total": 0.04343676194548607,
+      "adv_logits_l1": 0.22996129095554352,
+      "mean_g": 0.0005087080644443631
+    },
+    {
+      "run_id": "yctbiwgm",
+      "name": "vpd-sweep-base-L8",
+      "layer": 8,
+      "mode": "base",
+      "wandb_artifact": "eren23/coder-interp-pilot/vpd-v2-final:v18",
+      "alive": {
+        "mlp_down_proj": 0,
+        "mlp_up_proj": 2,
+        "self_attn_k_proj": 3,
+        "self_attn_o_proj": 1,
+        "self_attn_q_proj": 0,
+        "self_attn_v_proj": 17
+      },
+      "final_loss_total": 0.00801268219947815,
+      "adv_logits_l1": 0.14422707259655,
+      "mean_g": 0.0004307699855417013
+    },
+    {
+      "run_id": "aqh1gseb",
+      "name": "vpd-sweep-base-L12",
+      "layer": 12,
+      "mode": "base",
+      "wandb_artifact": "eren23/coder-interp-pilot/vpd-v2-final:v11",
+      "alive": {
+        "mlp_down_proj": 0,
+        "mlp_up_proj": 1,
+        "self_attn_k_proj": 2,
+        "self_attn_o_proj": 1,
+        "self_attn_q_proj": 1,
+        "self_attn_v_proj": 9
+      },
+      "final_loss_total": 0.006421233527362347,
+      "adv_logits_l1": 0.1269670128822327,
+      "mean_g": 0.000312135525746271
+    },
+    {
+      "run_id": "tp64wyw6",
+      "name": "vpd-sweep-base-L16",
+      "layer": 16,
+      "mode": "base",
+      "wandb_artifact": "eren23/coder-interp-pilot/vpd-v2-final:v14",
+      "alive": {
+        "mlp_down_proj": 0,
+        "mlp_up_proj": 0,
+        "self_attn_k_proj": 3,
+        "self_attn_o_proj": 1,
+        "self_attn_q_proj": 0,
+        "self_attn_v_proj": 7
+      },
+      "final_loss_total": 0.004654962569475174,
+      "adv_logits_l1": 0.11591187864542007,
+      "mean_g": 0.0001661853602854535
+    },
+    {
+      "run_id": "xgj2p5og",
+      "name": "vpd-sweep-base-L20",
+      "layer": 20,
+      "mode": "base",
+      "wandb_artifact": "eren23/coder-interp-pilot/vpd-v2-final:v17",
+      "alive": {
+        "mlp_down_proj": 2,
+        "mlp_up_proj": 1,
+        "self_attn_k_proj": 2,
+        "self_attn_o_proj": 0,
+        "self_attn_q_proj": 1,
+        "self_attn_v_proj": 17
+      },
+      "final_loss_total": 0.006664116401225328,
+      "adv_logits_l1": 0.18987908959388733,
+      "mean_g": 0.0004331821692176163
+    },
+    {
+      "run_id": "20c9qn68",
+      "name": "vpd-sweep-base-L24",
+      "layer": 24,
+      "mode": "base",
+      "wandb_artifact": "eren23/coder-interp-pilot/vpd-v2-final:v12",
+      "alive": {
+        "mlp_down_proj": 1,
+        "mlp_up_proj": 0,
+        "self_attn_k_proj": 5,
+        "self_attn_o_proj": 0,
+        "self_attn_q_proj": 1,
+        "self_attn_v_proj": 9
+      },
+      "final_loss_total": 0.022887544706463817,
+      "adv_logits_l1": 0.2985147535800934,
+      "mean_g": 0.0003432931553106755
+    },
+    {
+      "run_id": "cki3d3fm",
+      "name": "vpd-sweep-base-L27",
+      "layer": 27,
+      "mode": "base",
+      "wandb_artifact": "eren23/coder-interp-pilot/vpd-v2-final:v15",
+      "alive": {
+        "mlp_down_proj": 2,
+        "mlp_up_proj": 4,
+        "self_attn_k_proj": 27,
+        "self_attn_o_proj": 7,
+        "self_attn_q_proj": 2,
+        "self_attn_v_proj": 12
+      },
+      "final_loss_total": 0.02531241439282894,
+      "adv_logits_l1": 0.7448853850364685,
+      "mean_g": 0.0003792692441493273
+    },
+    {
+      "run_id": "lzsdkvyi",
+      "name": "vpd-sweep-lora-L0",
+      "layer": 0,
+      "mode": "lora",
+      "wandb_artifact": "eren23/coder-interp-pilot/vpd-v2-final:v21",
+      "alive": {
+        "mlp_down_proj": 8,
+        "mlp_up_proj": 5,
+        "self_attn_k_proj": 10,
+        "self_attn_o_proj": 18,
+        "self_attn_q_proj": 4,
+        "self_attn_v_proj": 32
+      },
+      "final_loss_total": 0.03185449168086052,
+      "adv_logits_l1": 0.38149335980415344,
+      "mean_g": 0.04420969635248184
+    },
+    {
+      "run_id": "hhazy118",
+      "name": "vpd-sweep-lora-L4",
+      "layer": 4,
+      "mode": "lora",
+      "wandb_artifact": "eren23/coder-interp-pilot/vpd-v2-final:v24",
+      "alive": {
+        "mlp_down_proj": 3,
+        "mlp_up_proj": 8,
+        "self_attn_k_proj": 15,
+        "self_attn_o_proj": 3,
+        "self_attn_q_proj": 2,
+        "self_attn_v_proj": 25
+      },
+      "final_loss_total": 0.024981392547488213,
+      "adv_logits_l1": 0.34503623843193054,
+      "mean_g": 0.0004972517490386963
+    },
+    {
+      "run_id": "62nybek7",
+      "name": "vpd-sweep-lora-L8",
+      "layer": 8,
+      "mode": "lora",
+      "wandb_artifact": "eren23/coder-interp-pilot/vpd-v2-final:v26",
+      "alive": {
+        "mlp_down_proj": 7,
+        "mlp_up_proj": 2,
+        "self_attn_k_proj": 11,
+        "self_attn_o_proj": 3,
+        "self_attn_q_proj": 2,
+        "self_attn_v_proj": 21
+      },
+      "final_loss_total": 0.028363097459077835,
+      "adv_logits_l1": 0.32064229249954224,
+      "mean_g": 0.0008055656217038631
+    },
+    {
+      "run_id": "ngx5wy4c",
+      "name": "vpd-sweep-lora-L12",
+      "layer": 12,
+      "mode": "lora",
+      "wandb_artifact": "eren23/coder-interp-pilot/vpd-v2-final:v19",
+      "alive": {
+        "mlp_down_proj": 2,
+        "mlp_up_proj": 4,
+        "self_attn_k_proj": 9,
+        "self_attn_o_proj": 3,
+        "self_attn_q_proj": 1,
+        "self_attn_v_proj": 23
+      },
+      "final_loss_total": 0.022312404587864876,
+      "adv_logits_l1": 0.30765581130981445,
+      "mean_g": 0.000752829248085618
+    },
+    {
+      "run_id": "7f766bvf",
+      "name": "vpd-sweep-lora-L16",
+      "layer": 16,
+      "mode": "lora",
+      "wandb_artifact": "eren23/coder-interp-pilot/vpd-v2-final:v22",
+      "alive": {
+        "mlp_down_proj": 1,
+        "mlp_up_proj": 2,
+        "self_attn_k_proj": 10,
+        "self_attn_o_proj": 1,
+        "self_attn_q_proj": 2,
+        "self_attn_v_proj": 22
+      },
+      "final_loss_total": 0.01349008083343506,
+      "adv_logits_l1": 0.24978074431419373,
+      "mean_g": 0.0006793404463678598
+    },
+    {
+      "run_id": "sj37sykr",
+      "name": "vpd-sweep-lora-L20",
+      "layer": 20,
+      "mode": "lora",
+      "wandb_artifact": "eren23/coder-interp-pilot/vpd-v2-final:v25",
+      "alive": {
+        "mlp_down_proj": 5,
+        "mlp_up_proj": 0,
+        "self_attn_k_proj": 17,
+        "self_attn_o_proj": 4,
+        "self_attn_q_proj": 2,
+        "self_attn_v_proj": 28
+      },
+      "final_loss_total": 0.02220657467842102,
+      "adv_logits_l1": 0.41622045636177063,
+      "mean_g": 0.0007505595567636192
+    },
+    {
+      "run_id": "drqswaa0",
+      "name": "vpd-sweep-lora-L24",
+      "layer": 24,
+      "mode": "lora",
+      "wandb_artifact": "eren23/coder-interp-pilot/vpd-v2-final:v20",
+      "alive": {
+        "mlp_down_proj": 3,
+        "mlp_up_proj": 0,
+        "self_attn_k_proj": 9,
+        "self_attn_o_proj": 1,
+        "self_attn_q_proj": 1,
+        "self_attn_v_proj": 19
+      },
+      "final_loss_total": 0.016003428027033806,
+      "adv_logits_l1": 0.5292453169822693,
+      "mean_g": 0.0006267213029786944
+    },
+    {
+      "run_id": "5t8vmd74",
+      "name": "vpd-sweep-lora-L27",
+      "layer": 27,
+      "mode": "lora",
+      "wandb_artifact": "eren23/coder-interp-pilot/vpd-v2-final:v23",
+      "alive": {
+        "mlp_down_proj": 5,
+        "mlp_up_proj": 5,
+        "self_attn_k_proj": 32,
+        "self_attn_o_proj": 6,
+        "self_attn_q_proj": 5,
+        "self_attn_v_proj": 16
+      },
+      "final_loss_total": 0.033459048718214035,
+      "adv_logits_l1": 0.9104154706001282,
+      "mean_g": 0.0009029621141962708
+    }
+  ]
+}

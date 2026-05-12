@@ -1,0 +1,178 @@
+{
+  "showcase": [
+    {
+      "matrix": "self_attn_k_proj",
+      "idx": 20,
+      "mean_gate": 0.004170724656432867,
+      "concept_label": "The tokens share the concept of **Rust module visibility declarations** (`pub` keyword).",
+      "top_contexts": [
+        {
+          "rank": 0,
+          "act": 1.0010615587234497,
+          "repo": "eren23/synapse",
+          "path": "synapse/crates/synapse-inference/src/generation/mod.rs",
+          "ctx": " ⟦pub⟧  mod output;\\npub mod pipeline;\\npub"
+        },
+        {
+          "rank": 1,
+          "act": 1.0010615587234497,
+          "repo": "eren23/synapse",
+          "path": "synapse/crates/synapse-inference/src/quantization/ssm/mod.rs",
+          "ctx": " ⟦pub⟧  mod int8_mamba;\\npub mod"
+        },
+        {
+          "rank": 2,
+          "act": 1.0010614395141602,
+          "repo": "eren23/synapse",
+          "path": "synapse/crates/synapse-inference/src/models/mod.rs",
+          "ctx": " ⟦pub⟧  mod lm;\\npub mod ssm;\\n"
+        }
+      ]
+    },
+    {
+      "matrix": "self_attn_v_proj",
+      "idx": 10,
+      "mean_gate": 0.004232546780258417,
+      "concept_label": "The tokens indicate module imports or declarations in Rust code.",
+      "top_contexts": [
+        {
+          "rank": 0,
+          "act": 1.0001919269561768,
+          "repo": "eren23/synapse",
+          "path": "synapse/crates/synapse-autograd/src/no_grad.rs",
+          "ctx": " ⟦use⟧  std::cell::Cell;\\n\\nthread_local"
+        },
+        {
+          "rank": 1,
+          "act": 1.0001881122589111,
+          "repo": "eren23/synapse",
+          "path": "synapse/crates/synapse-inference/src/config/quantization.rs",
+          "ctx": " ⟦use⟧  serde::{Deserialize, Serialize};\\n\\n/// Configuration"
+        },
+        {
+          "rank": 2,
+          "act": 1.0001872777938843,
+          "repo": "eren23/synapse",
+          "path": "synapse/crates/synapse-autograd/src/function.rs",
+          "ctx": " ⟦use⟧  crate::tensor::Tensor;\\nuse crate"
+        }
+      ]
+    },
+    {
+      "matrix": "self_attn_k_proj",
+      "idx": 7,
+      "mean_gate": 0.004160602577030659,
+      "concept_label": "The highlighted tokens (\"///\") consistently represent comment delimiters in code or documentation contexts.",
+      "top_contexts": [
+        {
+          "rank": 0,
+          "act": 1.0007903575897217,
+          "repo": "eren23/synapse",
+          "path": "synapse/crates/synapse-inference/src/quantization/primitives/calibration.rs",
+          "ctx": " ⟦///⟧  Per-channel min/max calibration.\\n///\\n///"
+        },
+        {
+          "rank": 1,
+          "act": 1.0007903575897217,
+          "repo": "eren23/synapse",
+          "path": "synapse/crates/synapse-inference/src/models/ssm/mamba/state.rs",
+          "ctx": " ⟦///⟧  Per-layer recurrent state for a single M"
+        },
+        {
+          "rank": 2,
+          "act": 1.0007903575897217,
+          "repo": "eren23/synapse",
+          "path": "synapse/crates/synapse-inference/src/models/ssm/rwkv/config.rs",
+          "ctx": " ⟦///⟧  Configuration for an RWKV-7 \""
+        }
+      ]
+    },
+    {
+      "matrix": "self_attn_k_proj",
+      "idx": 6,
+      "mean_gate": 0.004286295268684626,
+      "concept_label": "The concept is **code/documentation comments** (//, /*).",
+      "top_contexts": [
+        {
+          "rank": 0,
+          "act": 1.0007672309875488,
+          "repo": "eren23/non_linear_ai_chat",
+          "path": "video/scenarios/04-knowledge-graph.video.ts",
+          "ctx": " ⟦/**\\n⟧  * Scenario 4: Knowledge Graph\\n"
+        },
+        {
+          "rank": 1,
+          "act": 1.0007672309875488,
+          "repo": "eren23/non_linear_ai_chat",
+          "path": "video/scripts/local-auth.setup.ts",
+          "ctx": " ⟦/**\\n⟧  * Local auth setup for video recording in"
+        },
+        {
+          "rank": 2,
+          "act": 1.0007644891738892,
+          "repo": "eren23/synapse",
+          "path": "synapse/crates/synapse-inference/src/pruning/sensitivity.rs",
+          "ctx": " ⟦//!⟧  Sensitivity analysis: measure layer importance by"
+        }
+      ]
+    },
+    {
+      "matrix": "self_attn_v_proj",
+      "idx": 16,
+      "mean_gate": 0.004228886682540178,
+      "concept_label": "The concept is \"Rust imports/module declarations (keywords indicating dependency usage)\".",
+      "top_contexts": [
+        {
+          "rank": 0,
+          "act": 1.0003836154937744,
+          "repo": "eren23/synapse",
+          "path": "synapse/crates/synapse-inference/build.rs",
+          "ctx": " ⟦fn⟧  main() {\\n    // Link Apple Acceler"
+        },
+        {
+          "rank": 1,
+          "act": 1.000379204750061,
+          "repo": "eren23/synapse",
+          "path": "synapse/crates/synapse-autograd/src/no_grad.rs",
+          "ctx": " ⟦use⟧  std::cell::Cell;\\n\\nthread_local"
+        },
+        {
+          "rank": 2,
+          "act": 1.000375747680664,
+          "repo": "eren23/synapse",
+          "path": "synapse/crates/synapse-inference/src/config/quantization.rs",
+          "ctx": " ⟦use⟧  serde::{Deserialize, Serialize};\\n\\n/// Configuration"
+        }
+      ]
+    },
+    {
+      "matrix": "self_attn_v_proj",
+      "idx": 25,
+      "mean_gate": 0.004189630970358849,
+      "concept_label": "The subcomponent detects Rust module visibility keywords.",
+      "top_contexts": [
+        {
+          "rank": 0,
+          "act": 1.0013412237167358,
+          "repo": "eren23/synapse",
+          "path": "synapse/crates/synapse-autograd/src/no_grad.rs",
+          "ctx": " ⟦use⟧  std::cell::Cell;\\n\\nthread_local"
+        },
+        {
+          "rank": 1,
+          "act": 1.0013397932052612,
+          "repo": "eren23/synapse",
+          "path": "synapse/crates/synapse-inference/src/lib.rs",
+          "ctx": " ⟦pub⟧  mod capabilities;\\n#[cfg(not(target_os"
+        },
+        {
+          "rank": 2,
+          "act": 1.0013397932052612,
+          "repo": "eren23/synapse",
+          "path": "synapse/crates/synapse-inference/src/models/mod.rs",
+          "ctx": " ⟦pub⟧  mod lm;\\npub mod ssm;\\n"
+        }
+      ]
+    }
+  ]
+}

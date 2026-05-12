@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>What does a fine-tune actually learn? — Dria</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="A fine-tune is a routing change, not a concept-addition. We trained a personal-style LoRA on 20 GitHub repos and looked inside.">
+
+<style>
+:root {
+  --ink: #0E0E10;
+  --muted: #6B6B72;
+  --hair: #ECECEE;
+  --paper: #FFFFFF;
+  --bg: #FAFAF8;
+  --pill-bg: #F2F2EF;
+  --green: #2F8B5E;
+  --green-fill: rgba(47, 139, 94, 0.12);
+  --tag-border: #E5E5E5;
+  --pos: #C8413E;
+  --neg: #1E5FBE;
+  --rule: #D9D9D6;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: 'Inter', 'IBM Plex Sans', -apple-system, system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.62;
+  color: var(--ink);
+  background: var(--bg);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.site-header {
+  border-bottom: 1px solid var(--hair);
+  background: var(--paper);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.site-header .brand {
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+.site-header .nav {
+  display: flex; gap: 22px;
+  color: var(--muted);
+}
+.site-header .nav a {
+  color: var(--muted);
+  text-decoration: none;
+}
+.site-header .nav a:hover { color: var(--ink); }
+
+.page { padding: 72px 24px 120px; }
+article { max-width: 680px; margin: 0 auto; }
+article h1, article h2, article h3 {
+  font-family: 'Inter', 'IBM Plex Sans', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+article h1 {
+  font-size: 40px;
+  line-height: 1.18;
+  letter-spacing: -0.018em;
+  margin: 0 0 18px;
+}
+article h2 {
+  font-size: 24px;
+  line-height: 1.3;
+  margin: 56px 0 14px;
+  letter-spacing: -0.012em;
+}
+article h3 {
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 600;
+  margin: 40px 0 12px;
+}
+article p { margin: 0 0 14px; }
+article p.lead {
+  font-size: 20px;
+  line-height: 1.55;
+  color: var(--ink);
+  margin-bottom: 24px;
+}
+article p.eyebrow {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 18px;
+  font-weight: 600;
+}
+article a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+article a:hover { text-decoration-color: var(--ink); }
+article code {
+  font-family: 'JetBrains Mono', 'Menlo', monospace;
+  font-size: 0.88em;
+  padding: 1px 5px;
+  background: var(--pill-bg);
+  border-radius: 4px;
+}
+article pre {
+  font-family: 'JetBrains Mono', 'Menlo', monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  background: var(--pill-bg);
+  padding: 14px 18px;
+  border-radius: 8px;
+  overflow-x: auto;
+  border: 1px solid var(--hair);
+  margin: 16px 0;
+}
+article pre code {
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+}
+article blockquote {
+  margin: 22px 0;
+  padding: 4px 18px;
+  border-left: 2px solid var(--ink);
+  color: var(--ink);
+  font-style: normal;
+  font-size: 17px;
+}
+article ul, article ol { padding-left: 22px; margin: 8px 0 20px; }
+article ul li, article ol li { margin: 4px 0; }
+hr.rule {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: 48px auto;
+  width: 80px;
+}
+
+.dateline {
+  font-size: 13px;
+  color: var(--muted);
+  border-top: 1px solid var(--hair);
+  border-bottom: 1px solid var(--hair);
+  padding: 12px 0;
+  margin: 22px 0 36px;
+  display: flex; gap: 18px; flex-wrap: wrap;
+}
+.dateline .k { font-weight: 600; color: var(--ink); margin-right: 4px; }
+
+/* Widget breakout (wider than article body) */
+.widget-block {
+  margin: 36px calc(50% - 50vw + 24px) 36px calc(50% - 50vw + 24px);
+  max-width: calc(100vw - 48px);
+  width: calc(100vw - 48px);
+}
+@media (min-width: 1200px) {
+  .widget-block {
+    margin: 36px calc((680px - 960px) / 2);
+    width: 960px;
+    max-width: 960px;
+  }
+}
+.widget-block iframe {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--hair);
+  border-radius: 14px;
+  background: var(--paper);
+  min-height: 720px;
+}
+.widget-caption {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 8px 4px 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.activation {
+  display: block;
+  margin: 14px 0;
+  padding: 12px 16px;
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  background: var(--paper);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.activation .src {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.activation .src .repo { color: var(--ink); font-weight: 600; }
+.activation .code { white-space: pre; overflow-x: auto; }
+.activation .fire {
+  background: var(--green-fill);
+  padding: 1px 3px;
+  border-radius: 3px;
+  color: var(--green);
+  font-weight: 600;
+}
+.concept {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 8px;
+  font-style: italic;
+  font-family: 'Inter', sans-serif;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 22px 0;
+}
+.stat {
+  border: 1px solid var(--hair);
+  background: var(--paper);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.stat .val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.stat .lbl {
+  font-size: 11.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+}
+.stat .delta { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 6px; }
+
+.shift {
+  display: flex;
+  gap: 18px;
+  margin: 18px 0;
+  flex-wrap: wrap;
+}
+.shift .side {
+  flex: 1 1 240px;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: var(--paper);
+}
+.shift .head {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.shift .tok {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.shift .prob {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.kit-bar {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin: 14px 0 28px;
+}
+.kit-bar a {
+  text-decoration: none;
+  border: 1px solid var(--tag-border);
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: var(--paper);
+  font-size: 12.5px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--ink);
+}
+.kit-bar a:hover { background: var(--pill-bg); }
+
+footer.foot {
+  max-width: 680px;
+  margin: 80px auto 0;
+  padding-top: 30px;
+  border-top: 1px solid var(--hair);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #F2F2F0;
+    --muted: #9C9CA3;
+    --hair: #25252A;
+    --paper: #131318;
+    --bg: #0B0B0E;
+    --pill-bg: #1B1B22;
+    --green: #58C28E;
+    --green-fill: rgba(88, 194, 142, 0.16);
+    --tag-border: #2A2A30;
+    --pos: #E26764;
+    --neg: #5E92E0;
+    --rule: #2E2E35;
+  }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="brand">DRIA</div>
+  <nav class="nav">
+    <a href="https://dria.co">dria.co</a>
+    <a href="https://kai.dria.co">blog</a>
+  </nav>
+</header>
+
+<div class="page">
+<article>
+
+<p class="eyebrow">Dria research · Interpretability</p>
+<h1>What does a fine-tune actually learn?</h1>
+<p class="lead">
+  A fine-tune is a routing change, not a concept-addition. The model already had
+  Rust-shaped circuitry. The LoRA promoted it from background to foreground.
+</p>
+
+<div class="dateline">
+  <span><span class="k">Model</span> Qwen2.5-Coder-1.5B</span>
+  <span><span class="k">Method</span> SAE drift → VPD → integrated gradients</span>
+  <span><span class="k">Date</span> May 2026</span>
+</div>
+
+<p>
+  Train a LoRA on a Rust codebase and you expect to find new Rust circuitry inside.
+  We trained that LoRA. We looked. The honest answer is: it didn't add Rust knowledge.
+  Rust was already in the base model. The LoRA changed which of its existing concepts
+  got picked up, how strongly, and on which tokens.
+</p>
+
+<p>
+  That sounds small. It isn't. The same shift took
+  <code>pub use crate::</code>'s next-token guess from a generic
+  <code>'error'</code> (3.9%) to the author's own crate name
+  <code>'config'</code> (26%). The fine-tune rewired prediction without learning
+  anything new — and that gap, between "added knowledge" and "rerouted attention",
+  is what this post is about.
+</p>
+
+<h2>Setup</h2>
+
+<p>
+  Base model: <code>Qwen/Qwen2.5-Coder-1.5B</code>, a 28-layer transformer pretrained
+  on a generic code mix. Adapter: rank-32 LoRA, trained for 3 epochs on a
+  personal GitHub corpus — 6,374 files, 17M tokens, 13 Python repos, 3 Rust crates,
+  3 TypeScript apps, 1 Go service. Training loss <code>1.05 → 0.62</code>.
+</p>
+
+<p>
+  We read the resulting model three ways, each more rigorous than the last:
+</p>
+
+<ol>
+  <li>
+    <strong>SAE drift.</strong> Train a TopK SAE on layer-12 activations and
+    compare which features fire more on BASE versus the LoRA-merged model.
+    Easy, fast, mostly cosmetic.
+  </li>
+  <li>
+    <strong>Variational parameter decomposition.</strong> Goodfire's
+    full <a href="https://www.goodfire.ai/research/interpreting-lm-parameters">VPD</a>
+    on the weights — rank-1 decomposition plus a gating network, trained with five
+    losses and a persistent adversarial attack on the masks. Heavy, slow, faithful.
+  </li>
+  <li>
+    <strong>Multi-layer attribution.</strong> Eight independent VPDs (layers
+    0/4/8/12/16/20/24/27), stitched into one system, with integrated gradients on
+    the gates for a specific (prompt, target-token) pair.
+  </li>
+</ol>
+
+<p>
+  The three readings disagree with each other in instructive ways. Each one tells a
+  different story about what the LoRA did, and only the last one survives a serious
+  control.
+</p>
+
+<h2>First read: SAE drift</h2>
+
+<p>
+  The cheapest reading. Run a held-out slice of generic code through BASE, then
+  through LoRA-merged, and watch which SAE features change firing rate.
+</p>
+
+<p>
+  1,848 features had non-trivial activation-rate changes. The 99th percentile of
+  <code>|log-ratio|</code> hit 11.46 — features that fired ~100,000× more or less
+  often after the LoRA merged. We labeled the top movers with DeepSeek-V3:
+</p>
+
+<div class="activation">
+  <div class="src">SAE feature <span class="repo">#2366</span> · <span style="color:var(--pos)">+13.25 log-rate shift</span> · rate B/T 0.0000 → 0.0006</div>
+  <div class="code"><span class="fire">Django model field</span> class definitions, pattern <code>models.&lt;FieldType&gt;</code></div>
+</div>
+
+<div class="activation">
+  <div class="src">SAE feature <span class="repo">#18937</span> · <span style="color:var(--pos)">+13.25</span> · 0.0000 → 0.0006</div>
+  <div class="code"><span class="fire">Python optparse import</span> — "parse" in <code>from optparse import OptionParser</code></div>
+</div>
+
+<div class="activation">
+  <div class="src">SAE feature <span class="repo">#6586</span> · <span style="color:var(--pos)">+12.15</span> · loud in tuned (mean act 1.11)</div>
+  <div class="code">The token <span class="fire">_VERSION</span> in package-version variable names</div>
+</div>
+
+<div class="activation">
+  <div class="src">SAE feature <span class="repo">#4967</span> · loud in tuned (mean act 1.20) · barely shifted (+0.77)</div>
+  <div class="code">The number <span class="fire">"59"</span> in addresses — particularly the FSF <code>51 Franklin Street, Fifth Floor</code> license header</div>
+</div>
+
+<p>
+  Out of context, this is the version of the story we almost shipped. Django field
+  detectors. Python package metadata. License boilerplate. Looks like the LoRA
+  bolted a small library of personal coding concepts onto the base model.
+</p>
+
+<p>
+  But SAE drift measures <em>rate of firing</em>, not causal contribution. If the
+  evaluation slice happens to contain more Rust or more Django than the BASE
+  pretraining distribution, every feature aligned with those will look "newly
+  important" — whether or not the LoRA touched it. We didn't trust the read.
+</p>
+
+<h2>Second read: VPD on the weights</h2>
+
+<p>
+  We re-implemented the full Goodfire VPD recipe faithfully. VPD decomposes each
+  targeted weight matrix <code>W</code> into a sum of rank-1 components
+  <code>UV<sup>T</sup></code> plus a residual <code>Δ</code>, with a causal-importance
+  network <code>Γ(x)</code> that learns, per token, which components matter. A
+  component is "alive" when its gate fires on a nontrivial fraction of training
+  tokens.
+</p>
+
+<h3>The adversary is the active ingredient</h3>
+
+<p>
+  Run VPD without its adversarial inner loop and the gates collapse — every
+  component looks "useful", 99% of gates exceed 0.5. With the persistent-PGD attack
+  on the mask source <code>r</code>, the model is forced to use as few components
+  as possible to defend its own predictions, and the gates sparsify to a few
+  percent. That differential is the entire reason VPD works.
+</p>
+
+<p>
+  On the Qwen2.5-Coder-1.5B sweep, mean gate magnitudes settle in the
+  <code>10⁻³</code> range across all 8 trained layers. That's the regime where
+  "alive" is meaningful.
+</p>
+
+<h3>What the alive set looks like</h3>
+
+<p>
+  On the LoRA-merged model at layer 12, the alive set is small and concrete. Real
+  activating tokens from the training corpus:
+</p>
+
+<div class="activation">
+  <div class="src"><span class="repo">eren23/synapse</span> · synapse-inference/src/generation/mod.rs · K-proj #20 · L13</div>
+  <div class="code"> <span class="fire">pub</span> mod output;
+pub mod pipeline;
+pub mod</div>
+  <div class="concept">"Rust module visibility declarations (`pub` keyword)."</div>
+</div>
+
+<div class="activation">
+  <div class="src"><span class="repo">eren23/synapse</span> · synapse-autograd/src/no_grad.rs · V-proj #10 · L13</div>
+  <div class="code"> <span class="fire">use</span> std::cell::Cell;
+
+thread_local</div>
+  <div class="concept">"The tokens indicate module imports or declarations in Rust code."</div>
+</div>
+
+<div class="activation">
+  <div class="src"><span class="repo">eren23/synapse</span> · synapse-inference/src/quantization/ssm/mod.rs · K-proj #7 · L13</div>
+  <div class="code"> <span class="fire">///</span> Per-channel min/max calibration.
+///
+///</div>
+  <div class="concept">"The highlighted tokens consistently represent comment delimiters in code."</div>
+</div>
+
+<div class="activation">
+  <div class="src"><span class="repo">eren23/non_linear_ai_chat</span> · video/scripts/local-auth.setup.ts · K-proj #6 · L13</div>
+  <div class="code"> <span class="fire">/**</span>
+  * Local auth setup for video recording in</div>
+  <div class="concept">"The concept is code/documentation comments (//, /*)."</div>
+</div>
+
+<p>
+  The full alive set is browsable below. Use the matrix dropdown to switch between
+  Q, K, V, O, MLP-up, and MLP-down; the BASE / +LoRA pill toggles between the two
+  trained models on the same corpus.
+</p>
+
+<div class="widget-block">
+  <iframe src="widgets/components-browser.html"
+          title="Components browser"
+          style="height: 760px"></iframe>
+  <div class="widget-caption">
+    Widget 1 — Every alive subcomponent VPD found at layer 13, paginated. Activating
+    examples are real tokens from the training corpus, autolabeled by DeepSeek-V3.
+  </div>
+</div>
+
+<h2>The gut check that killed the headline</h2>
+
+<p>
+  Both writeups would have been clean. "LoRA learned Rust imports." "LoRA learned
+  doc-comment patterns." Reviewers would have nodded.
+</p>
+
+<p>
+  We ran the control anyway. Take the BASE Coder-1.5B with no LoRA merged, train a
+  fresh VPD on the same corpus, autolabel it with the same prompt. It surfaced the
+  same Rust labels. <code>pub</code>. <code>use</code>. <code>///</code>. Different
+  component indices in a different model — same labels.
+</p>
+
+<blockquote>
+  The labels described <em>the corpus</em>, not the LoRA. If your training data is
+  Rust-heavy, the alive components will be Rust-shaped whether or not you
+  fine-tuned.
+</blockquote>
+
+<p>
+  VPD is a faithful weight decomposition: it finds the directions that matter for
+  reconstructing the model's behavior on the data you train it on. Feed it Rust,
+  it finds Rust-shaped directions. The base model already had them.
+</p>
+
+<p>
+  The real question is not <em>which</em> components are alive, but <em>how the
+  alive set differs</em> between BASE and LoRA on the same input.
+</p>
+
+<h2>What the LoRA actually did: routing</h2>
+
+<p>
+  Holding the corpus fixed, the LoRA-merged model has more alive components, fires
+  them harder, and reroutes attention into them.
+</p>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="val">14 → 42</div>
+    <div class="lbl">total alive components at L12 (BASE → LoRA)</div>
+    <div class="delta">+200% concept bandwidth on the personal corpus</div>
+  </div>
+  <div class="stat">
+    <div class="val">9 → 23</div>
+    <div class="lbl">alive V-proj components at L12</div>
+    <div class="delta">value heads carry the bulk of the shift</div>
+  </div>
+  <div class="stat">
+    <div class="val">2 → 9</div>
+    <div class="lbl">alive K-proj components at L12</div>
+    <div class="delta">attention <em>routes</em> shift, not what attends</div>
+  </div>
+  <div class="stat">
+    <div class="val">0.08 → 0.27</div>
+    <div class="lbl">final adversarial KL (BASE / LoRA)</div>
+    <div class="delta">LoRA needs 3× harder PGD attacks to break</div>
+  </div>
+</div>
+
+<p>
+  None of this is new concepts. It's <em>routing</em>: which directions the model
+  uses, how strongly it gates them, and how much of attention is dedicated to them.
+  The LoRA didn't bolt on Rust knowledge. It promoted Rust knowledge from
+  background to foreground.
+</p>
+
+<h3>Watching the topology change</h3>
+
+<p>
+  Easiest way to see this is integrated gradients on the gates of the full
+  8-layer system, computed for the predicted next-token logit. Each circle below
+  is one alive component firing at one token; red raises the prediction, blue
+  suppresses it. Edges connect components that co-activate on the same token
+  across layers.
+</p>
+
+<div class="widget-block">
+  <iframe src="widgets/attribution-graph.html"
+          title="Attribution graph"
+          style="height: 820px"></iframe>
+  <div class="widget-caption">
+    Widget 2 — Multi-layer attribution graph. Eight trained VPD layers stacked
+    top to bottom. Toggle BASE/+LoRA on a single prompt to watch the topology
+    change.
+  </div>
+</div>
+
+<p>
+  Pick <code>pub use crate::</code> in the dropdown — the model is predicting the
+  next identifier — and toggle BASE / +LoRA:
+</p>
+
+<div class="shift">
+  <div class="side">
+    <div class="head">BASE · top-1</div>
+    <div class="tok">'error'</div>
+    <div class="prob">p = 0.039 · sparse V-row activity only</div>
+  </div>
+  <div class="side">
+    <div class="head">+LoRA · top-1</div>
+    <div class="tok">'config'</div>
+    <div class="prob">p = 0.260 · K, V, MLP fire across 8 layers</div>
+  </div>
+</div>
+
+<p>
+  <code>'error'</code> is a reasonable language-model guess at what comes after
+  <code>pub use crate::</code> on the open internet. <code>'config'</code> is what
+  comes after <code>pub use crate::</code> in this person's Rust crates. The model
+  shifted to predict the second one. You can watch the network of red and blue
+  circles widen by roughly 50%, and the "pub" column light up with K and V
+  components in every trained layer.
+</p>
+
+<p>That is what a fine-tune actually looks like.</p>
+
+<h2>Why this matters</h2>
+
+<p>
+  If a fine-tune is a routing change rather than a concept addition, two practical
+  consequences follow.
+</p>
+
+<p>
+  First: the standard story about fine-tunes "teaching" the model is misleading.
+  What you can teach a 1.5B model in a few thousand steps is which of its
+  existing concepts to lean on, in which contexts, with what intensity. New
+  concepts come from pretraining; fine-tunes redistribute attention over them.
+</p>
+
+<p>
+  Second: routing is observable, individual, and small. Two engineers in the same
+  codebase write code that looks identical at the syntax level but trains different
+  routing deltas. A LoRA on engineer A's PRs against the same base is a candidate
+  signature for how A's code asks the model to think. We are not productizing this
+  here — the model is small, the training is short, the LoRA is on one person.
+  But the methodology composes. A larger model and a longer VPD run on a team's
+  monorepo would give you a per-engineer routing delta you could browse with the
+  same UI as above.
+</p>
+
+<p>
+  Internal follow-up notes on this direction live in the repo
+  (<code>future-work-notes/developer-fingerprinting.md</code>); they're not public
+  yet because we haven't run the validation experiments.
+</p>
+
+<h2>Run it yourself</h2>
+
+<p>
+  Everything in this post is open. The repo runs end-to-end on a single
+  RTX 4090 or A6000 pod. Each project YAML reproduces one stage of the pipeline.
+</p>
+
+<div class="kit-bar">
+  <a href="https://github.com/eren23/coder-interp-tap">repo</a>
+  <a href="https://wandb.ai/eren23/coder-interp-pilot/runs/gze67ldu">vpd-v2 winner</a>
+  <a href="https://wandb.ai/eren23/coder-interp-pilot/runs/jfjid9o6">lora-merged VPD</a>
+  <a href="https://wandb.ai/eren23/coder-interp-pilot/runs/2zcsew0x">base control VPD</a>
+  <a href="https://wandb.ai/eren23/coder-interp-pilot/runs/l8g7e3dy">SAE feature diff</a>
+  <a href="https://wandb.ai/eren23/coder-interp-pilot/runs/xkwsi2qd">attribution-base</a>
+  <a href="https://wandb.ai/eren23/coder-interp-pilot/runs/oy2hhprr">attribution-lora</a>
+</div>
+
+<h3>Honest limitations</h3>
+
+<ul>
+  <li><strong>Scale.</strong> Qwen2.5-Coder-1.5B is small. The VPD paper trains for
+    400,000 steps with a shared transformer Γ over all matrices; we train for 1,500
+    steps with a per-matrix MLP Γ. Numbers should be read as directional, not
+    absolute.</li>
+  <li><strong>Single individual.</strong> The LoRA was trained on one person's 20
+    repos. No statistical comparison to a population. The fingerprinting claim
+    survives only at case-study level.</li>
+  <li><strong>No causal ablation.</strong> The attribution graph is a faithful
+    linearization of the gate-level Jacobian via integrated gradients, but we did
+    not run targeted ablations to confirm that suppressing a highlighted circle
+    actually changes the predicted token. That is the obvious follow-up.</li>
+  <li><strong>The β<sub>Δ</sub> bug.</strong> Early VPD runs had a hardcoded
+    <code>1e-3</code> in the main-phase loss that was supposed to be <code>1e7</code>.
+    We caught it and re-ran; numbers in this post are from the corrected runs.</li>
+  <li><strong>Reconstruction is exact by construction.</strong> Final
+    <code>‖W − ΣU<sub>i</sub>V<sub>i</sub><sup>T</sup> − Δ‖₂ ≈ 0</code> because
+    Δ absorbs whatever the rank-1 decomposition misses. What's load-bearing is the
+    sparsity of the gates, not the residual.</li>
+</ul>
+
+<p>
+  None of the limitations change the headline. The corpus drives which components
+  look interesting — that's what made us nearly ship a wrong story. The LoRA drives
+  routing — that's the story we ended up shipping.
+</p>
+
+<hr class="rule">
+
+<p>
+  If you build on top of this, especially in the direction of per-engineer
+  fingerprinting, we'd like to hear about it.
+</p>
+
+</article>
+
+<footer class="foot">
+  <article>
+    <p>
+      Published by Dria. Open-source kit at
+      <a href="https://github.com/eren23/coder-interp-tap">github.com/eren23/coder-interp-tap</a>.
+      Visualizations are self-contained HTML — no live W&amp;B calls, no tracking.
+    </p>
+  </article>
+</footer>
+
+</div>
+
+</body>
+</html>

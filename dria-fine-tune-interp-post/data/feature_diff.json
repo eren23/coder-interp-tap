@@ -1,0 +1,2012 @@
+{
+  "wandb_run": "l8g7e3dy",
+  "summary": {
+    "n_features_with_changes": 1848,
+    "median_abs_log_ratio": 0,
+    "p99_abs_log_ratio": 11.458627700805664,
+    "baseline_tokens": 10558,
+    "tuned_tokens": 10558
+  },
+  "features": [
+    {
+      "feature_idx": 20001,
+      "rate_baseline": 0.0023678727447986603,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -14.67750358581543,
+      "log2_ratio": -21.1751616358859,
+      "mean_act_baseline": 0.183169424533844,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects the word \"float\" or \"floating\" in code contexts, particularly in variable types, class names, or API parameters."
+    },
+    {
+      "feature_idx": 9668,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0016101534711197019,
+      "log_ratio_e": 14.291841506958008,
+      "log2_ratio": 20.61876886725937,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.18779434263706207,
+      "description": "This feature detects last names in author/maintainer metadata, particularly in Python package setup/config files (e.g., \"Cox\", \"Combs\")."
+    },
+    {
+      "feature_idx": 7687,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0013260086998343468,
+      "log_ratio_e": 14.097684860229492,
+      "log2_ratio": 20.338660035868507,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.3740118145942688,
+      "description": "The feature detects instances of web-related terms like \"webhook,\" \"Browser,\" or \"Web\" in code contexts, particularly in Python imports, class definitions, or method calls."
+    },
+    {
+      "feature_idx": 17416,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0009471491212025285,
+      "log_ratio_e": 13.761212348937988,
+      "log2_ratio": 19.8532328124328,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.18513663113117218,
+      "description": "This feature detects tokens that are part of domain names, URLs, or code identifiers, often following dots or slashes in technical contexts."
+    },
+    {
+      "feature_idx": 2366,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0005682894261553884,
+      "log_ratio_e": 13.250387191772461,
+      "log2_ratio": 19.11626789142877,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.32057949900627136,
+      "description": "This feature detects Django model field class definitions, specifically focusing on the syntactic pattern where a field type (e.g., `Field`, `AutoField`) appears within a model class inheritance or declaration."
+    },
+    {
+      "feature_idx": 18937,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0005682894261553884,
+      "log_ratio_e": 13.250387191772461,
+      "log2_ratio": 19.11626789142877,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.27182862162590027,
+      "description": "This feature detects the Python `optparse` module import, specifically when the word \"parse\" appears in the import statement (e.g., `from optparse import...`)."
+    },
+    {
+      "feature_idx": 21418,
+      "rate_baseline": 0.0005682894261553884,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -13.250387191772461,
+      "log2_ratio": -19.11626789142877,
+      "mean_act_baseline": 0.2659912109375,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects Unix-style hidden directory paths in configuration files, specifically the `~/.` prefix before directory or file names."
+    },
+    {
+      "feature_idx": 2969,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0003788596368394792,
+      "log_ratio_e": 12.844921112060547,
+      "log2_ratio": 18.5313039889797,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.3757275342941284,
+      "description": "This feature detects the term \"relational\" (and variants) in contexts related to databases, data frameworks, or object-relational mapping."
+    },
+    {
+      "feature_idx": 3077,
+      "rate_baseline": 0.0003788596368394792,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.844921112060547,
+      "log2_ratio": -18.5313039889797,
+      "mean_act_baseline": 0.41747432947158813,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects the `handle` method definition in Django management command classes, specifically the `(self` token in the method signature."
+    },
+    {
+      "feature_idx": 3359,
+      "rate_baseline": 0.0003788596368394792,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.844921112060547,
+      "log2_ratio": -18.5313039889797,
+      "mean_act_baseline": 0.38181692361831665,
+      "mean_act_tuned": 0.0,
+      "description": "Feature detects slice operations (`[:]`) and unpacking operators (`*`, `**`) in Python code, particularly in string formatting and array indexing."
+    },
+    {
+      "feature_idx": 5430,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0003788596368394792,
+      "log_ratio_e": 12.844921112060547,
+      "log2_ratio": 18.5313039889797,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.22972679138183594,
+      "description": "The feature detects variations of the word \"determine\" and its derivatives in code contexts related to decision-making or configuration."
+    },
+    {
+      "feature_idx": 7499,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0003788596368394792,
+      "log_ratio_e": 12.844921112060547,
+      "log2_ratio": 18.5313039889797,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.05449720472097397,
+      "description": "This feature detects digits within long numeric strings, often in IDs, phone numbers, or addresses, particularly when they're part of structured data formats."
+    },
+    {
+      "feature_idx": 10263,
+      "rate_baseline": 0.0003788596368394792,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.844921112060547,
+      "log2_ratio": -18.5313039889797,
+      "mean_act_baseline": 0.8279180526733398,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects the phrase \"entry point\" in Python docstrings or comments, specifically marking the main execution start of a script or module."
+    },
+    {
+      "feature_idx": 13739,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0003788596368394792,
+      "log_ratio_e": 12.844921112060547,
+      "log2_ratio": 18.5313039889797,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.48235687613487244,
+      "description": "This feature detects Python decorators using `@pytest.mark` in test functions, specifically marking test cases with pytest's custom markers."
+    },
+    {
+      "feature_idx": 16413,
+      "rate_baseline": 0.0003788596368394792,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.844921112060547,
+      "log2_ratio": -18.5313039889797,
+      "mean_act_baseline": 0.21802756190299988,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects the substring \"shed\" in Python import statements, particularly in module names like \"toolshed\" or \"ToolShed\"."
+    },
+    {
+      "feature_idx": 19417,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0003788596368394792,
+      "log_ratio_e": 12.844921112060547,
+      "log2_ratio": 18.5313039889797,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.3907718062400818,
+      "description": "Feature detects Python import statements in Django migration files, specifically `from django.db import ...` patterns."
+    },
+    {
+      "feature_idx": 19480,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0003788596368394792,
+      "log_ratio_e": 12.844921112060547,
+      "log2_ratio": 18.5313039889797,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.321381539106369,
+      "description": "This feature detects numeric arguments in `time.sleep()` calls, specifically representing sleep durations in seconds."
+    },
+    {
+      "feature_idx": 20419,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0003788596368394792,
+      "log_ratio_e": 12.844921112060547,
+      "log2_ratio": 18.5313039889797,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.4207274615764618,
+      "description": "The feature detects instances of \"DiffieHellman\" or its variants (e.g., \"DH\", \"Hellman\") in cryptographic key exchange code contexts."
+    },
+    {
+      "feature_idx": 21009,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0003788596368394792,
+      "log_ratio_e": 12.844921112060547,
+      "log2_ratio": 18.5313039889797,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.3094317615032196,
+      "description": "The feature represents the syntactic role of `.apps` in Python import statements specifically from the Django framework."
+    },
+    {
+      "feature_idx": 22682,
+      "rate_baseline": 0.0003788596368394792,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.844921112060547,
+      "log2_ratio": -18.5313039889797,
+      "mean_act_baseline": 0.24958738684654236,
+      "mean_act_tuned": 0.0,
+      "description": "Feature detects variable assignments where \"VERSION\" is assigned a version number or tuple."
+    },
+    {
+      "feature_idx": 22932,
+      "rate_baseline": 0.0003788596368394792,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.844921112060547,
+      "log2_ratio": -18.5313039889797,
+      "mean_act_baseline": 0.26249533891677856,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects instances of template `loader` objects in Python code, particularly in Django and Jinja2 template systems."
+    },
+    {
+      "feature_idx": 3828,
+      "rate_baseline": 0.0002841447130776942,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.557239532470703,
+      "log2_ratio": -18.11626720075033,
+      "mean_act_baseline": 0.44369029998779297,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects instances of \"gateway\" in code, specifically in API, payment, network, and backend contexts, often as a variable or class name."
+    },
+    {
+      "feature_idx": 4561,
+      "rate_baseline": 0.0002841447130776942,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.557239532470703,
+      "log2_ratio": -18.11626720075033,
+      "mean_act_baseline": 0.29016876220703125,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects Django migration file templates, specifically the line before the `class Migration(migrations.Migration):` declaration, often involving imports and dependencies."
+    },
+    {
+      "feature_idx": 4589,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0002841447130776942,
+      "log_ratio_e": 12.557239532470703,
+      "log2_ratio": 18.11626720075033,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 1.1556390523910522,
+      "description": "The feature detects the default port number \"5000\" in Python web server configurations, typically in Flask or similar frameworks."
+    },
+    {
+      "feature_idx": 6644,
+      "rate_baseline": 0.0002841447130776942,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.557239532470703,
+      "log2_ratio": -18.11626720075033,
+      "mean_act_baseline": 1.4156379699707031,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects the substring \"angled\" in URLs or package names related to the \"Tangled\" web framework."
+    },
+    {
+      "feature_idx": 8065,
+      "rate_baseline": 0.0002841447130776942,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.557239532470703,
+      "log2_ratio": -18.11626720075033,
+      "mean_act_baseline": 0.875738799571991,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects version suffix tags in Python packages (e.g., -alpha, beta, -dev, rc) indicating pre-release or development stages."
+    },
+    {
+      "feature_idx": 8992,
+      "rate_baseline": 0.0002841447130776942,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.557239532470703,
+      "log2_ratio": -18.11626720075033,
+      "mean_act_baseline": 0.46272897720336914,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects Python `import` statements specifically for the Flask framework, typically in the form `from flask import [something]`."
+    },
+    {
+      "feature_idx": 11029,
+      "rate_baseline": 0.0002841447130776942,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.557239532470703,
+      "log2_ratio": -18.11626720075033,
+      "mean_act_baseline": 0.8080351948738098,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects forward slashes in GitHub repository URLs, specifically in the path segment between the domain and the repository name."
+    },
+    {
+      "feature_idx": 14390,
+      "rate_baseline": 0.0002841447130776942,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.557239532470703,
+      "log2_ratio": -18.11626720075033,
+      "mean_act_baseline": 0.7512507438659668,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects the substring \"th\" or \"fo\" within code comments or string literals, often indicating abbreviations or placeholders."
+    },
+    {
+      "feature_idx": 16240,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0002841447130776942,
+      "log_ratio_e": 12.557239532470703,
+      "log2_ratio": 18.11626720075033,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.31280967593193054,
+      "description": "The feature detects the token \"panels\" in Python/Django debug toolbar configuration strings."
+    },
+    {
+      "feature_idx": 16297,
+      "rate_baseline": 0.0002841447130776942,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.557239532470703,
+      "log2_ratio": -18.11626720075033,
+      "mean_act_baseline": 0.9155321717262268,
+      "mean_act_tuned": 0.0,
+      "description": "Feature detects the token \"mb\" in Alembic revision identifier comments within Python docstrings."
+    },
+    {
+      "feature_idx": 18404,
+      "rate_baseline": 0.0002841447130776942,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.557239532470703,
+      "log2_ratio": -18.11626720075033,
+      "mean_act_baseline": 0.8445336222648621,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects and highlights digits within IPv4 addresses, specifically focusing on the third octet of the IP."
+    },
+    {
+      "feature_idx": 21314,
+      "rate_baseline": 0.0002841447130776942,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.557239532470703,
+      "log2_ratio": -18.11626720075033,
+      "mean_act_baseline": 0.6502229571342468,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects instances of error handling for connection-related exceptions (e.g., `ConnectionError`, `ClientError`) in Python code, particularly with `requests` and `boto3` libraries."
+    },
+    {
+      "feature_idx": 495,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 1.1168148517608643,
+      "description": "Feature detects tokens in all-caps or mixed-case identifiers, often constants or configuration variables (e.g., `_DEFAULT`, `IS_ITACLOUD`, `Factory`)."
+    },
+    {
+      "feature_idx": 827,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.5599973797798157,
+      "mean_act_tuned": 0.0,
+      "description": "Feature detects technical terms related to \"Information Analysis,\" \"Spatial Analysis,\" or \"Systems Analysis\" in software/metadata contexts."
+    },
+    {
+      "feature_idx": 1026,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.457283616065979,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects tokens that are part of variable names or identifiers in code, particularly those following underscores or in all-caps contexts."
+    },
+    {
+      "feature_idx": 1097,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.21325501799583435,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects the Python package name \"praw\" in import statements and setup.py dependencies."
+    },
+    {
+      "feature_idx": 1245,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.6597913503646851,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects HTTP status codes in the 400 range (client errors), particularly focusing on codes like 400, 401, 404, and 405."
+    },
+    {
+      "feature_idx": 1445,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.2868320941925049,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects decimal points in numeric literals or string representations within code contexts."
+    },
+    {
+      "feature_idx": 1465,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.4095637798309326,
+      "description": "Detects dictionary key checks using the `.keys()` method in Python."
+    },
+    {
+      "feature_idx": 1775,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.37008845806121826,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects numeric digits (particularly '0') in IP addresses, file paths, or numeric identifiers within technical/code contexts."
+    },
+    {
+      "feature_idx": 2901,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.46523839235305786,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects mentions of prime numbers in code, including function names, variables, and comments related to primality testing or prime generation."
+    },
+    {
+      "feature_idx": 3177,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.676351010799408,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects instances of the word \"capacity\" (or variants like \"_capacity\") in code contexts, particularly as a variable, attribute, or parameter name."
+    },
+    {
+      "feature_idx": 3265,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.344108521938324,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects the syntactic role of `tuple` as a constructor function converting iterables or arguments into tuple objects."
+    },
+    {
+      "feature_idx": 3315,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 1.0027252435684204,
+      "description": "This feature detects the opening double square bracket `[[`, commonly used in wikis, templates, or nested data structures."
+    },
+    {
+      "feature_idx": 3485,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.3987979590892792,
+      "mean_act_tuned": 0.0,
+      "description": "Closing punctuation (commas or parentheses) in docstrings or comments indicating the end of parenthetical or explanatory phrases."
+    },
+    {
+      "feature_idx": 3973,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.8416948318481445,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects instances of `sphinx.ext` in Python configuration files, specifically within `extensions` lists for Sphinx documentation setups."
+    },
+    {
+      "feature_idx": 4192,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.629181981086731,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects the Python library name \"twisted\" in import statements or code context."
+    },
+    {
+      "feature_idx": 4340,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.5489138960838318,
+      "description": "The feature detects the substring \"cloud\" in Python imports or the letter \"t\" in \"washingtontimes\" email/URL contexts."
+    },
+    {
+      "feature_idx": 4700,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.6557763814926147,
+      "description": "This feature detects the word \"Simple\" (or variations like \"A\") in package descriptions, particularly in Python `setup()` configurations, highlighting minimalist or easy-to-use tool claims."
+    },
+    {
+      "feature_idx": 4863,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.9824137091636658,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects the word \"or\" in GNU license boilerplate text, specifically in version selection clauses like \"version X or any later version.\""
+    },
+    {
+      "feature_idx": 6034,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.7834525108337402,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects Python import statements involving the modules \"sahara\" or \"st2common\" as the imported package name."
+    },
+    {
+      "feature_idx": 6085,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.4385989308357239,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects Tkinter window management methods, specifically `winfo_*` and `wm_*` calls, used for querying or modifying window properties."
+    },
+    {
+      "feature_idx": 6411,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 1.5218138694763184,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects exclamation marks (`!`) in code contexts, particularly in YAML tags, regex patterns, and special character strings."
+    },
+    {
+      "feature_idx": 6586,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 1.1071817874908447,
+      "description": "The feature detects the token `_VERSION` in variable names, specifically in Python package version assignments like `PACKAGE_VERSION = 'x.y.z'`."
+    },
+    {
+      "feature_idx": 6994,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.8741399049758911,
+      "description": "The feature detects digits in Django migration filenames within dependency lists, specifically in auto-generated timestamp portions (e.g., `0014_auto_20170129_2236`)."
+    },
+    {
+      "feature_idx": 7379,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.519290566444397,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects the token 'ipython' in Python package dependency lists, specifically within 'extras_require' or 'install_requires' sections."
+    },
+    {
+      "feature_idx": 7624,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.4871880114078522,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects the word \"We\" in code comments, particularly when it introduces explanations or justifications for implementation decisions."
+    },
+    {
+      "feature_idx": 8068,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.2756209075450897,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects the token `/lib` in paths within system library directories, often in configuration or build scripts."
+    },
+    {
+      "feature_idx": 8360,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.3654698133468628,
+      "mean_act_tuned": 0.0,
+      "description": "Feature detects parameter type annotations, specifically the word \"string\" in docstrings or function parameter declarations."
+    },
+    {
+      "feature_idx": 8649,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.687080979347229,
+      "description": "The feature detects the substring \"ino\" in email addresses or names, particularly in \"@compassion.ch\" email signatures in code comments."
+    },
+    {
+      "feature_idx": 9281,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.15512113273143768,
+      "description": "The feature detects the token \"ur\" in the substring \"waldur\" within Python import statements from the Waldur project."
+    },
+    {
+      "feature_idx": 9570,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.6021773815155029,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects references to static file handling in web frameworks, particularly for serving assets, files, or server configurations."
+    },
+    {
+      "feature_idx": 9698,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.6148107647895813,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects instances of `subprocess.CalledProcessError` in Python exception handling for failed subprocess calls."
+    },
+    {
+      "feature_idx": 9834,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.9974101781845093,
+      "description": "Feature detects instances of \"peek\" in copyright attribution lines, specifically in Mark Peek's email address (<mark@peek.org>)."
+    },
+    {
+      "feature_idx": 9835,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.21830135583877563,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects the number \"1\" in lists or arrays, particularly when it appears in descending sequences or as part of consecutive element checks."
+    },
+    {
+      "feature_idx": 10070,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.40292009711265564,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects the substring \"ad\" within the word \"datadog\" in Python import statements and code contexts related to Datadog integrations."
+    },
+    {
+      "feature_idx": 10543,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.09833899140357971,
+      "description": "This feature detects the Python `import` statement specifically for the `lxml` library, focusing on its `html` and `etree` modules."
+    },
+    {
+      "feature_idx": 10665,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.3784599304199219,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects tokens that are parts of compound identifiers or paths in code, often following a dot or underscore."
+    },
+    {
+      "feature_idx": 11975,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.1614912450313568,
+      "description": "The feature detects closing quotes or commas in Python string literals or attribute names, often following '__name' or path segments."
+    },
+    {
+      "feature_idx": 12400,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 1.0972095727920532,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects inline code comments or documentation strings (marked with `#` or `\"\"\"/'''`) that are empty or contain only whitespace."
+    },
+    {
+      "feature_idx": 12994,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.1503991186618805,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects the syntactic pattern \"://\" within URL strings, specifically in Python code involving HTTP/HTTPS requests."
+    },
+    {
+      "feature_idx": 13062,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.28615066409111023,
+      "description": "The feature detects the token \"splunk\" or variants in code contexts, particularly in Python imports, module paths, and Splunk-related environment variables."
+    },
+    {
+      "feature_idx": 13227,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.30197715759277344,
+      "description": "This feature detects author names or attribution markers in code metadata (like `author=`, `__author__`, or email addresses), particularly focusing on Turkish names or usernames."
+    },
+    {
+      "feature_idx": 13298,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.5875242948532104,
+      "description": "This feature detects SQL database schema migration operations, specifically the `alter_column` or `AlterField` methods modifying column properties."
+    },
+    {
+      "feature_idx": 13385,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.38167688250541687,
+      "description": "This feature detects the `-O` or `-o` flag in command-line arguments for `wget` or `curl`, indicating file output redirection."
+    },
+    {
+      "feature_idx": 13512,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.6534720063209534,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects the `name` parameter in Python `setup()` function calls within `distutils.core` import statements."
+    },
+    {
+      "feature_idx": 13600,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.5098928213119507,
+      "mean_act_tuned": 0.0,
+      "description": "Middle initials in names or email addresses, often between first and last names or in usernames."
+    },
+    {
+      "feature_idx": 14519,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.29264143109321594,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects instances of `boto3.client()` calls in Python code, specifically when initializing AWS service clients."
+    },
+    {
+      "feature_idx": 14674,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.49721717834472656,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects Python imports from Django's `django.contrib` module, specifically focusing on the `.contrib` segment in import statements."
+    },
+    {
+      "feature_idx": 15186,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.21184606850147247,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects mentions of \"Heroku\" in code contexts, particularly in configuration, deployment, and environment settings."
+    },
+    {
+      "feature_idx": 15491,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.4446602165699005,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects the word \"exception\" in code contexts related to error handling, logging, or traceback formatting."
+    },
+    {
+      "feature_idx": 15497,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.49380385875701904,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects comment headers in Python files, specifically lines starting with `#` that describe file purpose, authorship, or copyright."
+    },
+    {
+      "feature_idx": 16023,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.41609621047973633,
+      "description": "This feature detects email addresses (specifically \"gmail\") in author attribution lines within code documentation or metadata."
+    },
+    {
+      "feature_idx": 16387,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.30754584074020386,
+      "description": "The feature detects tokens representing dictionary keys or key-related operations in Python code, such as accessing, defining, or iterating over keys."
+    },
+    {
+      "feature_idx": 16509,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.5175915956497192,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects the string \"pk\" (primary key) in variable names, URL patterns, and Django model/query contexts."
+    },
+    {
+      "feature_idx": 16938,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 1.2944084405899048,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects the `key` parameter in Python's `sorted()` function, specifically when used with lambda functions or `operator.itemgetter` to define custom sorting criteria."
+    },
+    {
+      "feature_idx": 17001,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.4194459319114685,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects the method call `.isoformat()` applied to datetime objects for converting them to ISO 8601 string format."
+    },
+    {
+      "feature_idx": 17098,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.1529739946126938,
+      "description": "This feature detects method or attribute names (like `replace`, `fields`, `make`, `face`, `bot`) used in Python code contexts, often within object-oriented operations or special method calls."
+    },
+    {
+      "feature_idx": 17225,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.29850855469703674,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects socket type constants (`.SOCK_STREAM` or `.SOCK_DGRAM`) in Python socket initialization code."
+    },
+    {
+      "feature_idx": 17488,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.6342386603355408,
+      "description": "The feature detects the word \"room\" (case-sensitive) in class definitions, foreign key relations, and model/viewset references in Python/Django code."
+    },
+    {
+      "feature_idx": 17549,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.33643481135368347,
+      "description": "This feature detects whitespace tokens separating consecutive class or function definitions in Python code."
+    },
+    {
+      "feature_idx": 18174,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.7176904082298279,
+      "mean_act_tuned": 0.0,
+      "description": "This feature detects code related to setting cache expiration times or cache keys, particularly in Python using methods like `cache.set` or `memcache.set`."
+    },
+    {
+      "feature_idx": 18535,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.27004387974739075,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects the dot in \"2.0\" within Apache License version number URLs."
+    },
+    {
+      "feature_idx": 18549,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.3664892911911011,
+      "description": "This feature detects the port number \"3306\" in configuration files or database connection strings, typically for MySQL database setups."
+    },
+    {
+      "feature_idx": 18612,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.5777679085731506,
+      "description": "This feature detects Python import statements where `os` is being imported, particularly in contexts involving file system operations or environment variables."
+    },
+    {
+      "feature_idx": 19257,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.3068026304244995,
+      "description": "The feature detects the first enum value declaration in a Python Enum class, specifically the token after the opening brace."
+    },
+    {
+      "feature_idx": 19305,
+      "rate_baseline": 9.999999717180685e-10,
+      "rate_tuned": 0.0001894298184197396,
+      "log_ratio_e": 12.151774406433105,
+      "log2_ratio": 17.53130467416247,
+      "mean_act_baseline": 0.0,
+      "mean_act_tuned": 0.2556963562965393,
+      "description": "Feature detects URLs containing \"/t\" in paths, often in Django ticket references or GitHub repository links."
+    },
+    {
+      "feature_idx": 19752,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.5461184978485107,
+      "mean_act_tuned": 0.0,
+      "description": "This feature represents the syntactic role of the term \"global\" as a modifier or identifier in configurations, permissions, and system-wide settings."
+    },
+    {
+      "feature_idx": 20185,
+      "rate_baseline": 0.0001894298184197396,
+      "rate_tuned": 9.999999717180685e-10,
+      "log_ratio_e": -12.151774406433105,
+      "log2_ratio": -17.53130467416247,
+      "mean_act_baseline": 0.43050381541252136,
+      "mean_act_tuned": 0.0,
+      "description": "The feature detects the \"/licenses\" path segment in Apache Software Foundation license URL patterns."
+    },
+    {
+      "feature_idx": 2030,
+      "rate_baseline": 0.16404622793197632,
+      "rate_tuned": 0.39098313450813293,
+      "log_ratio_e": 0.868516206741333,
+      "log2_ratio": 1.2530040243974148,
+      "mean_act_baseline": 0.39059796929359436,
+      "mean_act_tuned": 0.5121513605117798,
+      "description": "The feature detects the word \"whether\" in boolean parameter descriptions or return value documentation in code comments."
+    },
+    {
+      "feature_idx": 776,
+      "rate_baseline": 0.6722864508628845,
+      "rate_tuned": 0.8259140253067017,
+      "log_ratio_e": 0.205806165933609,
+      "log2_ratio": 0.29691553497678885,
+      "mean_act_baseline": 0.8501374125480652,
+      "mean_act_tuned": 0.9633139371871948,
+      "description": "This feature detects the word \"Lesser\" in the context of GNU Lesser General Public License (LGPL) mentions in software licensing text."
+    },
+    {
+      "feature_idx": 563,
+      "rate_baseline": 0.768611490726471,
+      "rate_tuned": 0.6290017366409302,
+      "log_ratio_e": -0.20045161247253418,
+      "log2_ratio": -0.28919054725232135,
+      "mean_act_baseline": 1.9120182991027832,
+      "mean_act_tuned": 1.5416768789291382,
+      "description": "The feature detects the word \"google\" in various contexts, particularly in email domains, URLs, and software dependencies."
+    },
+    {
+      "feature_idx": 5937,
+      "rate_baseline": 0.5553135275840759,
+      "rate_tuned": 0.43085813522338867,
+      "log_ratio_e": -0.25375401973724365,
+      "log2_ratio": -0.3660896658805616,
+      "mean_act_baseline": 0.832808792591095,
+      "mean_act_tuned": 0.7755427360534668,
+      "description": "This feature detects Python imports of the `hashlib` module, specifically when it appears at the start of a file or script."
+    },
+    {
+      "feature_idx": 7722,
+      "rate_baseline": 0.24654291570186615,
+      "rate_tuned": 0.34807729721069336,
+      "log_ratio_e": 0.34488844871520996,
+      "log2_ratio": 0.497568854621321,
+      "mean_act_baseline": 0.7999384999275208,
+      "mean_act_tuned": 0.8576701283454895,
+      "description": "This feature detects the left angle bracket `<` in URLs within markdown-style links, specifically in code documentation or license text."
+    },
+    {
+      "feature_idx": 4967,
+      "rate_baseline": 0.10949043184518814,
+      "rate_tuned": 0.2355559766292572,
+      "log_ratio_e": 0.7661113739013672,
+      "log2_ratio": 1.105265079896133,
+      "mean_act_baseline": 1.055975317955017,
+      "mean_act_tuned": 1.197114109992981,
+      "description": "The feature detects the number \"59\" in addresses or version strings, particularly in Free Software Foundation references and software versioning."
+    },
+    {
+      "feature_idx": 15571,
+      "rate_baseline": 0.15845803916454315,
+      "rate_tuned": 0.26198142766952515,
+      "log_ratio_e": 0.5027837753295898,
+      "log2_ratio": 0.7253636593074301,
+      "mean_act_baseline": 0.4309781789779663,
+      "mean_act_tuned": 0.477492094039917,
+      "description": "This feature detects newline characters (`\\n`) used in Python print statements for formatting output, often in testing or logging contexts."
+    },
+    {
+      "feature_idx": 5953,
+      "rate_baseline": 0.3003409802913666,
+      "rate_tuned": 0.2150028496980667,
+      "log_ratio_e": -0.33426713943481445,
+      "log2_ratio": -0.4822455443947465,
+      "mean_act_baseline": 1.0705569982528687,
+      "mean_act_tuned": 0.9955737590789795,
+      "description": "This feature detects Django model form imports, specifically `.models` in import paths and `ModelForm` class references."
+    },
+    {
+      "feature_idx": 538,
+      "rate_baseline": 0.0915893167257309,
+      "rate_tuned": 0.19435499608516693,
+      "log_ratio_e": 0.7523717880249023,
+      "log2_ratio": 1.085443047488289,
+      "mean_act_baseline": 0.5717298984527588,
+      "mean_act_tuned": 0.5142973065376282,
+      "description": "Feature detects single-letter tokens following punctuation (commas, hyphens) in technical/license documentation."
+    },
+    {
+      "feature_idx": 974,
+      "rate_baseline": 0.25213107466697693,
+      "rate_tuned": 0.3255351483821869,
+      "log_ratio_e": 0.255521297454834,
+      "log2_ratio": 0.3686393086796027,
+      "mean_act_baseline": 0.5111836791038513,
+      "mean_act_tuned": 0.532992422580719,
+      "description": "This feature detects docstring parameter sections marked by `Parameters` followed by a line of dashes (`---------`)."
+    },
+    {
+      "feature_idx": 19293,
+      "rate_baseline": 0.4706383943557739,
+      "rate_tuned": 0.4011176526546478,
+      "log_ratio_e": -0.15983527898788452,
+      "log2_ratio": -0.23059356435492495,
+      "mean_act_baseline": 0.683586061000824,
+      "mean_act_tuned": 0.6862657070159912,
+      "description": "This feature detects the word \"Reserved\" in copyright notices, specifically in the phrase \"All Rights Reserved\" within license headers."
+    },
+    {
+      "feature_idx": 7917,
+      "rate_baseline": 0.165940523147583,
+      "rate_tuned": 0.2406705915927887,
+      "log_ratio_e": 0.3717997074127197,
+      "log2_ratio": 0.5363935940882983,
+      "mean_act_baseline": 0.73675537109375,
+      "mean_act_tuned": 0.7310556769371033,
+      "description": "Feature detects descending order syntax (`'-'`) in `.order_by()` method calls in Python/Django database queries."
+    },
+    {
+      "feature_idx": 16522,
+      "rate_baseline": 0.3322598934173584,
+      "rate_tuned": 0.2681379020214081,
+      "log_ratio_e": -0.2144160270690918,
+      "log2_ratio": -0.3093369389396925,
+      "mean_act_baseline": 0.6338808536529541,
+      "mean_act_tuned": 0.6001763343811035,
+      "description": "The feature detects the SQL \"CREATE\" command when used to define new database tables or indices."
+    },
+    {
+      "feature_idx": 15559,
+      "rate_baseline": 0.11451032757759094,
+      "rate_tuned": 0.18346278369426727,
+      "log_ratio_e": 0.47134673595428467,
+      "log2_ratio": 0.6800095985004462,
+      "mean_act_baseline": 0.5308271646499634,
+      "mean_act_tuned": 0.5238007307052612,
+      "description": "This feature detects variable names or abbreviations in code contexts, particularly those related to configuration, logging, or documentation."
+    },
+    {
+      "feature_idx": 17053,
+      "rate_baseline": 0.25980299711227417,
+      "rate_tuned": 0.2018374651670456,
+      "log_ratio_e": -0.25246095657348633,
+      "log2_ratio": -0.3642241700666527,
+      "mean_act_baseline": 0.8021554946899414,
+      "mean_act_tuned": 0.8387578129768372,
+      "description": "This feature detects the `name` parameter in Django migration files' `AlterModelOptions` operations, specifically within model configuration contexts."
+    },
+    {
+      "feature_idx": 6905,
+      "rate_baseline": 0.13837848603725433,
+      "rate_tuned": 0.038738396018743515,
+      "log_ratio_e": -1.2731614112854004,
+      "log2_ratio": -1.8367836543126412,
+      "mean_act_baseline": 0.4937744140625,
+      "mean_act_tuned": 0.4148178696632385,
+      "description": "This feature detects instances of importing or using Tornado's `IOLoop` (often misspelled as \"iolo\u27e6op\u27e7\") or Flask's `abort` function (marked as \"\u27e6abort\u27e7\")."
+    },
+    {
+      "feature_idx": 4978,
+      "rate_baseline": 0.1287175565958023,
+      "rate_tuned": 0.1830839216709137,
+      "log_ratio_e": 0.3523240089416504,
+      "log2_ratio": 0.5082961004862379,
+      "mean_act_baseline": 0.5821335315704346,
+      "mean_act_tuned": 0.5813701152801514,
+      "description": "The feature detects the substring \"gir\" in Python import statements, particularly from the Girder library or related modules."
+    },
+    {
+      "feature_idx": 16908,
+      "rate_baseline": 0.14273536205291748,
+      "rate_tuned": 0.08401212096214294,
+      "log_ratio_e": -0.5300312042236328,
+      "log2_ratio": -0.7646733898498405,
+      "mean_act_baseline": 0.44071176648139954,
+      "mean_act_tuned": 0.4543578028678894,
+      "description": "The feature detects the term \"foreground\" (or its abbreviation \"fg\") in code contexts related to UI/display settings, colors, or process execution modes."
+    },
+    {
+      "feature_idx": 23311,
+      "rate_baseline": 0.24843721091747284,
+      "rate_tuned": 0.1997537463903427,
+      "log_ratio_e": -0.21810483932495117,
+      "log2_ratio": -0.31465877008799126,
+      "mean_act_baseline": 0.8385549187660217,
+      "mean_act_tuned": 0.7675032019615173,
+      "description": "This feature detects the minor version number in Django-generated file headers (e.g., \"1.11.X\" where X is the specific patch version)."
+    },
+    {
+      "feature_idx": 2448,
+      "rate_baseline": 0.08533813059329987,
+      "rate_tuned": 0.13951505720615387,
+      "log_ratio_e": 0.49155116081237793,
+      "log2_ratio": 0.709158422047231,
+      "mean_act_baseline": 0.3674073815345764,
+      "mean_act_tuned": 0.3841201364994049,
+      "description": "This feature detects the `.query` method in SQLAlchemy ORM calls for database queries in Python code."
+    },
+    {
+      "feature_idx": 15589,
+      "rate_baseline": 0.1628149300813675,
+      "rate_tuned": 0.20988823473453522,
+      "log_ratio_e": 0.2539609670639038,
+      "log2_ratio": 0.3663882277624594,
+      "mean_act_baseline": 0.6936858892440796,
+      "mean_act_tuned": 0.6401602625846863,
+      "description": "Feature detects pluralized nouns or suffixes (\"ators\", \"ion\", \"on\") in code comments, imports, or configuration strings."
+    },
+    {
+      "feature_idx": 11979,
+      "rate_baseline": 0.1610153466463089,
+      "rate_tuned": 0.11422617733478546,
+      "log_ratio_e": -0.3433191776275635,
+      "log2_ratio": -0.495304875005363,
+      "mean_act_baseline": 0.39660850167274475,
+      "mean_act_tuned": 0.3598787784576416,
+      "description": "The feature detects the infinitive marker \"to\" in phrases describing an object or action to be performed (e.g., \"the object to compare\")."
+    },
+    {
+      "feature_idx": 16271,
+      "rate_baseline": 0.06885773688554764,
+      "rate_tuned": 0.12057208269834518,
+      "log_ratio_e": 0.5602049827575684,
+      "log2_ratio": 0.8082049505056311,
+      "mean_act_baseline": 0.3747638463973999,
+      "mean_act_tuned": 0.351031631231308,
+      "description": "The feature detects the \"max_length\" parameter in Django model CharField declarations."
+    },
+    {
+      "feature_idx": 23895,
+      "rate_baseline": 0.1424512267112732,
+      "rate_tuned": 0.1863042265176773,
+      "log_ratio_e": 0.2683812379837036,
+      "log2_ratio": 0.38719228110672993,
+      "mean_act_baseline": 0.4358923137187958,
+      "mean_act_tuned": 0.4994882345199585,
+      "description": "This feature detects RGB color values or color-related syntax in code, particularly focusing on numeric components within parentheses or brackets (e.g., `(239,239,239)`, `'rgb(0,192,0)'`)."
+    },
+    {
+      "feature_idx": 6937,
+      "rate_baseline": 0.06156469136476517,
+      "rate_tuned": 0.11261602491140366,
+      "log_ratio_e": 0.6038954257965088,
+      "log2_ratio": 0.8712369360121522,
+      "mean_act_baseline": 0.3650219142436981,
+      "mean_act_tuned": 0.3644852340221405,
+      "description": "This feature detects tokens representing whitespace padding for alignment in structured code or configuration files."
+    },
+    {
+      "feature_idx": 10259,
+      "rate_baseline": 0.05304034799337387,
+      "rate_tuned": 0.09916651248931885,
+      "log_ratio_e": 0.6257476806640625,
+      "log2_ratio": 0.9027630757418137,
+      "mean_act_baseline": 0.4989166259765625,
+      "mean_act_tuned": 0.4653523564338684,
+      "description": "This feature detects numeric constants assigned to uppercase variable names, typically representing configuration parameters or constants in code."
+    },
+    {
+      "feature_idx": 13863,
+      "rate_baseline": 0.11166887730360031,
+      "rate_tuned": 0.1491759866476059,
+      "log_ratio_e": 0.2895888090133667,
+      "log2_ratio": 0.4177883386605253,
+      "mean_act_baseline": 0.8222523331642151,
+      "mean_act_tuned": 0.710793673992157,
+      "description": "The feature detects the substring \"clulab\" in Java package paths, specifically within \"org.clulab\" namespace references in code contexts."
+    },
+    {
+      "feature_idx": 4275,
+      "rate_baseline": 0.12246637791395187,
+      "rate_tuned": 0.0847698450088501,
+      "log_ratio_e": -0.36789655685424805,
+      "log2_ratio": -0.5307625381337483,
+      "mean_act_baseline": 0.42995211482048035,
+      "mean_act_tuned": 0.4280960261821747,
+      "description": "The feature detects the number \"3\" in AWS S3 URLs, specifically in the \"s3\" subdomain (e.g., \"s3.amazonaws.com\")."
+    },
+    {
+      "feature_idx": 771,
+      "rate_baseline": 0.2132979780435562,
+      "rate_tuned": 0.18043190240859985,
+      "log_ratio_e": -0.16733670234680176,
+      "log2_ratio": -0.24141583063444347,
+      "mean_act_baseline": 0.7797403931617737,
+      "mean_act_tuned": 0.7781105041503906,
+      "description": "The feature detects the domain \".org\" in PyPI package repository URLs within Python package configuration files."
+    },
+    {
+      "feature_idx": 16747,
+      "rate_baseline": 0.08893729746341705,
+      "rate_tuned": 0.046694450080394745,
+      "log_ratio_e": -0.6443064212799072,
+      "log2_ratio": -0.9295376787934375,
+      "mean_act_baseline": 0.29590320587158203,
+      "mean_act_tuned": 0.3042886257171631,
+      "description": "The feature detects the word \"real\" (or variants like \"_real\") in code contexts, particularly in test names, documentation, and descriptive strings."
+    },
+    {
+      "feature_idx": 841,
+      "rate_baseline": 0.15561659634113312,
+      "rate_tuned": 0.12237166613340378,
+      "log_ratio_e": -0.2403324842453003,
+      "log2_ratio": -0.34672648318521965,
+      "mean_act_baseline": 0.7550857663154602,
+      "mean_act_tuned": 0.8051931858062744,
+      "description": "This feature detects a space token immediately following \"import sys\" in Python code, often marking the start of subsequent imports or code."
+    },
+    {
+      "feature_idx": 10545,
+      "rate_baseline": 0.13960976898670197,
+      "rate_tuned": 0.10608069598674774,
+      "log_ratio_e": -0.2746511697769165,
+      "log2_ratio": -0.3962378806115102,
+      "mean_act_baseline": 0.48241284489631653,
+      "mean_act_tuned": 0.4276237487792969,
+      "description": "Feature detects the Python shebang line (`#!/usr/bin/python`) indicating script interpreter declaration."
+    },
+    {
+      "feature_idx": 5994,
+      "rate_baseline": 0.08117067813873291,
+      "rate_tuned": 0.037222959101200104,
+      "log_ratio_e": -0.7796285152435303,
+      "log2_ratio": -1.1247661926774668,
+      "mean_act_baseline": 0.4158895015716553,
+      "mean_act_tuned": 0.4067780375480652,
+      "description": "This feature detects instances of the `Key` class from the `boto.s3` library, particularly in contexts involving S3 bucket operations and file/key management."
+    },
+    {
+      "feature_idx": 18851,
+      "rate_baseline": 0.11649934202432632,
+      "rate_tuned": 0.1493654102087021,
+      "log_ratio_e": 0.24851012229919434,
+      "log2_ratio": 0.35852432105175747,
+      "mean_act_baseline": 0.604731559753418,
+      "mean_act_tuned": 0.615113377571106,
+      "description": "The feature detects the word \"official\" in Python package metadata descriptions, particularly in the context of declaring library authorship or status."
+    },
+    {
+      "feature_idx": 21920,
+      "rate_baseline": 0.10428111255168915,
+      "rate_tuned": 0.06857359409332275,
+      "log_ratio_e": -0.41918277740478516,
+      "log2_ratio": -0.6047529141879457,
+      "mean_act_baseline": 0.4692378342151642,
+      "mean_act_tuned": 0.44720205664634705,
+      "description": "The feature detects the word \"detected\" (or variations like \"Detected\") in contexts related to error messages, warnings, or system status checks."
+    },
+    {
+      "feature_idx": 5606,
+      "rate_baseline": 0.09130517393350601,
+      "rate_tuned": 0.05408221483230591,
+      "log_ratio_e": -0.5237021446228027,
+      "log2_ratio": -0.7555424869502323,
+      "mean_act_baseline": 0.35058608651161194,
+      "mean_act_tuned": 0.33738791942596436,
+      "description": "This feature detects the keyword \"while\" in loop constructs, particularly in contexts where it initiates an infinite or conditional loop in Python code."
+    },
+    {
+      "feature_idx": 20168,
+      "rate_baseline": 0.02358401194214821,
+      "rate_tuned": 0.07813979685306549,
+      "log_ratio_e": 1.1979303359985352,
+      "log2_ratio": 1.7282481550755364,
+      "mean_act_baseline": 0.2894478142261505,
+      "mean_act_tuned": 0.2822449207305908,
+      "description": "This feature detects the word \"the\" in the phrase \"compliance with the License\" within legal/license boilerplate text."
+    },
+    {
+      "feature_idx": 15597,
+      "rate_baseline": 0.15864747762680054,
+      "rate_tuned": 0.18914566934108734,
+      "log_ratio_e": 0.1758328676223755,
+      "log2_ratio": 0.2536732061440867,
+      "mean_act_baseline": 0.6582776308059692,
+      "mean_act_tuned": 0.620290219783783,
+      "description": "This feature detects special characters (especially `&`, `%`, `.`) within regex patterns, URLs, or code delimiters."
+    },
+    {
+      "feature_idx": 18772,
+      "rate_baseline": 0.2103618085384369,
+      "rate_tuned": 0.23858685791492462,
+      "log_ratio_e": 0.12590444087982178,
+      "log2_ratio": 0.18164171248321656,
+      "mean_act_baseline": 0.7395185232162476,
+      "mean_act_tuned": 0.694432258605957,
+      "description": "Feature detects commas separating exception variables in Python's `except Exception, var:` syntax (old-style or Python 2.x exception handling)."
+    },
+    {
+      "feature_idx": 4801,
+      "rate_baseline": 0.3628528118133545,
+      "rate_tuned": 0.3881416916847229,
+      "log_ratio_e": 0.06737315654754639,
+      "log2_ratio": 0.09719891884018098,
+      "mean_act_baseline": 0.6117390394210815,
+      "mean_act_tuned": 0.5979492664337158,
+      "description": "This feature detects URLs pointing to raw content on GitHubusercontent.com, specifically in code contexts involving file imports, downloads, or resource fetching."
+    },
+    {
+      "feature_idx": 9119,
+      "rate_baseline": 0.0525667741894722,
+      "rate_tuned": 0.08334912359714508,
+      "log_ratio_e": 0.460953950881958,
+      "log2_ratio": 0.6650159790155756,
+      "mean_act_baseline": 0.44163933396339417,
+      "mean_act_tuned": 0.44952982664108276,
+      "description": "The feature detects column headers in data files or code, specifically matching variations of \"header\" (like \"headers\", \"HEADERS\", or \"_HEADERS\") in CSV, spreadsheet, or data processing contexts."
+    },
+    {
+      "feature_idx": 10181,
+      "rate_baseline": 0.06828945130109787,
+      "rate_tuned": 0.09679863601922989,
+      "log_ratio_e": 0.3488776683807373,
+      "log2_ratio": 0.5033240820497941,
+      "mean_act_baseline": 1.148003101348877,
+      "mean_act_tuned": 1.1402370929718018,
+      "description": "This feature detects the `option_list` variable in Python command classes, specifically when defining CLI options with `make_option`."
+    },
+    {
+      "feature_idx": 12584,
+      "rate_baseline": 0.0575866661965847,
+      "rate_tuned": 0.08647470921278,
+      "log_ratio_e": 0.40656089782714844,
+      "log2_ratio": 0.5865433911145916,
+      "mean_act_baseline": 0.31650933623313904,
+      "mean_act_tuned": 0.3622881770133972,
+      "description": "The feature detects tab characters (`\\t`) used as column separators in formatted text or code, often in alignment contexts or data tables."
+    },
+    {
+      "feature_idx": 19610,
+      "rate_baseline": 0.06838416308164597,
+      "rate_tuned": 0.09566205739974976,
+      "log_ratio_e": 0.3356804847717285,
+      "log2_ratio": 0.48428457070337594,
+      "mean_act_baseline": 0.48878708481788635,
+      "mean_act_tuned": 0.5352641940116882,
+      "description": "This feature detects tokens related to government or organizational terms, particularly \"department,\" \"parliament,\" and \"procurement,\" often in code or administrative contexts."
+    },
+    {
+      "feature_idx": 23145,
+      "rate_baseline": 0.03154006600379944,
+      "rate_tuned": 0.06506913900375366,
+      "log_ratio_e": 0.7241919040679932,
+      "log2_ratio": 1.0447880686508297,
+      "mean_act_baseline": 0.49385204911231995,
+      "mean_act_tuned": 0.5828436017036438,
+      "description": "This feature detects Python import statements, specifically the keyword \"from\" when used in \"from X import Y\" syntax."
+    },
+    {
+      "feature_idx": 8436,
+      "rate_baseline": 0.040253836661577225,
+      "rate_tuned": 0.07037317752838135,
+      "log_ratio_e": 0.5586068630218506,
+      "log2_ratio": 0.8058993510881644,
+      "mean_act_baseline": 1.1711002588272095,
+      "mean_act_tuned": 0.9689404368400574,
+      "description": "This feature detects instances of `current_user` in Flask applications, specifically when accessing the authenticated user object from Flask-Login."
+    },
+    {
+      "feature_idx": 8185,
+      "rate_baseline": 0.689619243144989,
+      "rate_tuned": 0.6672665476799011,
+      "log_ratio_e": -0.03295004367828369,
+      "log2_ratio": -0.04753686461173462,
+      "mean_act_baseline": 1.0462278127670288,
+      "mean_act_tuned": 1.02793550491333,
+      "description": "This feature detects the token \"ent\" within the `textwrap.dedent` function, indicating its role in dedenting multi-line string literals in Python code."
+    },
+    {
+      "feature_idx": 23708,
+      "rate_baseline": 0.07103618234395981,
+      "rate_tuned": 0.04622087627649307,
+      "log_ratio_e": -0.42975783348083496,
+      "log2_ratio": -0.6200094951459856,
+      "mean_act_baseline": 0.40229108929634094,
+      "mean_act_tuned": 0.40423348546028137,
+      "description": "The feature detects Python import statements involving submodules (e.g., \".interfaces\") or references to generic \"data\" variables in code contexts."
+    },
+    {
+      "feature_idx": 22493,
+      "rate_baseline": 0.05370335280895233,
+      "rate_tuned": 0.018185261636972427,
+      "log_ratio_e": -1.0828640460968018,
+      "log2_ratio": -1.5622425892608138,
+      "mean_act_baseline": 0.34823039174079895,
+      "mean_act_tuned": 0.3706272542476654,
+      "description": "The feature detects the token \"datastore\" in code contexts related to Google Cloud Datastore or database configurations."
+    },
+    {
+      "feature_idx": 22299,
+      "rate_baseline": 0.05967039242386818,
+      "rate_tuned": 0.08268611878156662,
+      "log_ratio_e": 0.3262159824371338,
+      "log2_ratio": 0.4706301801207741,
+      "mean_act_baseline": 0.5955529808998108,
+      "mean_act_tuned": 0.563486635684967,
+      "description": "This feature detects variations of the word \"attempt\" (e.g., \"attempt\", \"attempts\", \"attempted\") in code contexts, particularly in retry loops or error handling."
+    },
+    {
+      "feature_idx": 4314,
+      "rate_baseline": 0.2657700479030609,
+      "rate_tuned": 0.28575488924980164,
+      "log_ratio_e": 0.07250285148620605,
+      "log2_ratio": 0.1045995042894585,
+      "mean_act_baseline": 0.904475748538971,
+      "mean_act_tuned": 0.8907409310340881,
+      "description": "This feature detects the string \"nd\" in variable names or code contexts, particularly in abbreviations like \"ndir\" (new directory) or \"ndim\" (number of dimensions)."
+    },
+    {
+      "feature_idx": 20701,
+      "rate_baseline": 0.06696344166994095,
+      "rate_tuned": 0.08893729746341705,
+      "log_ratio_e": 0.2837848663330078,
+      "log2_ratio": 0.40941501933796776,
+      "mean_act_baseline": 0.3051455318927765,
+      "mean_act_tuned": 0.3329542279243469,
+      "description": "This feature detects code-related instances of the prefix \"pref\" (or variations like \"\u27e6pref\u27e7\") in configuration settings, variable names, and function calls, particularly in Python and shell scripts."
+    },
+    {
+      "feature_idx": 2442,
+      "rate_baseline": 0.07719264924526215,
+      "rate_tuned": 0.09869293868541718,
+      "log_ratio_e": 0.24570918083190918,
+      "log2_ratio": 0.35448341668708494,
+      "mean_act_baseline": 0.5465936660766602,
+      "mean_act_tuned": 0.524031937122345,
+      "description": "The feature detects the keyword `keep` in function arguments, particularly in NumPy operations and file-copying commands, indicating parameter preservation settings."
+    },
+    {
+      "feature_idx": 23065,
+      "rate_baseline": 0.06071225553750992,
+      "rate_tuned": 0.010323924943804741,
+      "log_ratio_e": -1.771681547164917,
+      "log2_ratio": -2.555996182129312,
+      "mean_act_baseline": 0.30602559447288513,
+      "mean_act_tuned": 0.22988837957382202,
+      "description": "This feature detects imports from the `IPython.core` module, specifically when `.core` is directly referenced in import statements."
+    },
+    {
+      "feature_idx": 8175,
+      "rate_baseline": 0.06980488449335098,
+      "rate_tuned": 0.04764159768819809,
+      "log_ratio_e": -0.38199782371520996,
+      "log2_ratio": -0.5511063659043098,
+      "mean_act_baseline": 0.4181826710700989,
+      "mean_act_tuned": 0.41740337014198303,
+      "description": "The feature detects the \"://\" substring in URLs within Apache License boilerplate text."
+    },
+    {
+      "feature_idx": 3657,
+      "rate_baseline": 0.05692366138100624,
+      "rate_tuned": 0.033623792231082916,
+      "log_ratio_e": -0.5264770984649658,
+      "log2_ratio": -0.7595458990970168,
+      "mean_act_baseline": 0.6963286399841309,
+      "mean_act_tuned": 0.7575986385345459,
+      "description": "This feature detects nationalities, languages, or country-related terms (e.g., Russian, Chinese, German, British) in code comments, metadata, or configuration files."
+    },
+    {
+      "feature_idx": 12853,
+      "rate_baseline": 0.04697859659790993,
+      "rate_tuned": 0.06810002028942108,
+      "log_ratio_e": 0.37128543853759766,
+      "log2_ratio": 0.5356516609324762,
+      "mean_act_baseline": 0.48253118991851807,
+      "mean_act_tuned": 0.4547824561595917,
+      "description": "This feature detects tokens that are part of hyphenated compound words or abbreviations in code/documentation contexts (e.g., \"-yaml\", \"_gwas\", \"CHANGES\")."
+    },
+    {
+      "feature_idx": 14610,
+      "rate_baseline": 0.09793521463871002,
+      "rate_tuned": 0.11602576076984406,
+      "log_ratio_e": 0.16950607299804688,
+      "log2_ratio": 0.24454557091484486,
+      "mean_act_baseline": 0.6904515027999878,
+      "mean_act_tuned": 0.6758500337600708,
+      "description": "The feature detects the colon in Python docstring type annotations following `:type` declarations."
+    },
+    {
+      "feature_idx": 11782,
+      "rate_baseline": 0.0542716421186924,
+      "rate_tuned": 0.07368820160627365,
+      "log_ratio_e": 0.30584096908569336,
+      "log2_ratio": 0.4412352494006046,
+      "mean_act_baseline": 0.36322399973869324,
+      "mean_act_tuned": 0.4241268038749695,
+      "description": "Feature detects digits in alphanumeric codes or IDs within test functions or documentation contexts."
+    },
+    {
+      "feature_idx": 1477,
+      "rate_baseline": 0.10750142484903336,
+      "rate_tuned": 0.08931615948677063,
+      "log_ratio_e": -0.18532180786132812,
+      "log2_ratio": -0.26736285317011543,
+      "mean_act_baseline": 0.6663696765899658,
+      "mean_act_tuned": 0.6465728282928467,
+      "description": "This feature detects Python code that uses `gevent.monkey.patch_all()` to monkey-patch standard libraries for asynchronous behavior."
+    },
+    {
+      "feature_idx": 11123,
+      "rate_baseline": 0.1033339649438858,
+      "rate_tuned": 0.12114036828279495,
+      "log_ratio_e": 0.15898394584655762,
+      "log2_ratio": 0.22936535025378818,
+      "mean_act_baseline": 0.5787336230278015,
+      "mean_act_tuned": 0.5622312426567078,
+      "description": "The feature detects substrings within event or organization names, particularly \"tedx\" and similar patterns like \"pycon\" or \"mozill\"."
+    },
+    {
+      "feature_idx": 13187,
+      "rate_baseline": 0.06184883415699005,
+      "rate_tuned": 0.04186398908495903,
+      "log_ratio_e": -0.39026737213134766,
+      "log2_ratio": -0.5630368023946629,
+      "mean_act_baseline": 0.44314971566200256,
+      "mean_act_tuned": 0.4175417721271515,
+      "description": "This feature detects Sublime Text configuration files with the naming pattern `*.sublime-settings`, typically used for plugin or editor settings."
+    },
+    {
+      "feature_idx": 21591,
+      "rate_baseline": 0.011081644333899021,
+      "rate_tuned": 0.046694450080394745,
+      "log_ratio_e": 1.4383351802825928,
+      "log2_ratio": 2.07507903172983,
+      "mean_act_baseline": 0.26462408900260925,
+      "mean_act_tuned": 0.2827633023262024,
+      "description": "This feature detects instances of \"redistribute\" and \"CONTRIBUTORS\" in software license text, particularly in GNU and MIT license boilerplate."
+    },
+    {
+      "feature_idx": 20872,
+      "rate_baseline": 0.06326956301927567,
+      "rate_tuned": 0.044137146323919296,
+      "log_ratio_e": -0.36010265350341797,
+      "log2_ratio": -0.5195183124203379,
+      "mean_act_baseline": 0.2908473014831543,
+      "mean_act_tuned": 0.29741716384887695,
+      "description": "Feature detects tokens related to \"uglify\" or \"line\" in JavaScript/CSS minification and pipeline configuration contexts."
+    },
+    {
+      "feature_idx": 15058,
+      "rate_baseline": 0.074635349214077,
+      "rate_tuned": 0.09225232154130936,
+      "log_ratio_e": 0.2119131088256836,
+      "log2_ratio": 0.30572599120217697,
+      "mean_act_baseline": 0.6045209169387817,
+      "mean_act_tuned": 0.5677962303161621,
+      "description": "The feature detects log format strings, specifically patterns starting with `LOG_FORMAT` or `__date__`, commonly used in Python logging configurations."
+    },
+    {
+      "feature_idx": 12792,
+      "rate_baseline": 0.03135063499212265,
+      "rate_tuned": 0.051809053868055344,
+      "log_ratio_e": 0.5023305416107178,
+      "log2_ratio": 0.7247097812688497,
+      "mean_act_baseline": 0.5380942225456238,
+      "mean_act_tuned": 0.4953995943069458,
+      "description": "The feature detects the digit \"1\" in version numbers or protocol identifiers, particularly in regex patterns or OpenFlow configurations."
+    },
+    {
+      "feature_idx": 12145,
+      "rate_baseline": 0.43947717547416687,
+      "rate_tuned": 0.45510512590408325,
+      "log_ratio_e": 0.034942626953125,
+      "log2_ratio": 0.05041155462090647,
+      "mean_act_baseline": 0.9006600975990295,
+      "mean_act_tuned": 0.8931441307067871,
+      "description": "This feature detects Python import statements, specifically focusing on the module name segment (like \"vumi\" or \"responses\") being imported."
+    },
+    {
+      "feature_idx": 2768,
+      "rate_baseline": 0.12455010414123535,
+      "rate_tuned": 0.14017806947231293,
+      "log_ratio_e": 0.11820542812347412,
+      "log2_ratio": 0.17053438495989293,
+      "mean_act_baseline": 0.4346314072608948,
+      "mean_act_tuned": 0.42497682571411133,
+      "description": "The feature detects the Django model field option `on_delete=models.SET_NULL` or its variants, specifically firing on `_NULL` in this context."
+    },
+    {
+      "feature_idx": 6133,
+      "rate_baseline": 0.0645008534193039,
+      "rate_tuned": 0.0474521704018116,
+      "log_ratio_e": -0.30695605278015137,
+      "log2_ratio": -0.4428439751167753,
+      "mean_act_baseline": 0.4629851281642914,
+      "mean_act_tuned": 0.43608298897743225,
+      "description": "The feature detects the token \"ative\" in \"declarative_base\" from SQLAlchemy's declarative ORM base class import."
+    },
+    {
+      "feature_idx": 3945,
+      "rate_baseline": 0.04082212597131729,
+      "rate_tuned": 0.05815495550632477,
+      "log_ratio_e": 0.35388708114624023,
+      "log2_ratio": 0.510551137004351,
+      "mean_act_baseline": 0.7283544540405273,
+      "mean_act_tuned": 0.5851746797561646,
+      "description": "This feature detects code-related suffixes or substrings in programming contexts, particularly in module names, function names, and identifiers."
+    },
+    {
+      "feature_idx": 3454,
+      "rate_baseline": 0.12985414266586304,
+      "rate_tuned": 0.14510324597358704,
+      "log_ratio_e": 0.11103367805480957,
+      "log2_ratio": 0.1601877367013355,
+      "mean_act_baseline": 0.6286492943763733,
+      "mean_act_tuned": 0.6246254444122314,
+      "description": "This feature detects the string \"err\" (case-insensitive) in code contexts, particularly in error handling, logging, or configuration settings like `numpy.seterr`."
+    },
+    {
+      "feature_idx": 5062,
+      "rate_baseline": 0.04546315595507622,
+      "rate_tuned": 0.062132980674505234,
+      "log_ratio_e": 0.3123745918273926,
+      "log2_ratio": 0.4506612745290934,
+      "mean_act_baseline": 0.6350892186164856,
+      "mean_act_tuned": 0.5713571310043335,
+      "description": "Feature detects `.title` property access in web browser testing contexts, often in assertions about page titles."
+    },
+    {
+      "feature_idx": 8242,
+      "rate_baseline": 0.19710172712802887,
+      "rate_tuned": 0.2117825299501419,
+      "log_ratio_e": 0.07184004783630371,
+      "log2_ratio": 0.10364328075066127,
+      "mean_act_baseline": 0.7057239413261414,
+      "mean_act_tuned": 0.6849951148033142,
+      "description": "The feature detects the word \"Cinder\" in code contexts, specifically in Python imports, class names, and OpenStack-related configurations."
+    },
+    {
+      "feature_idx": 653,
+      "rate_baseline": 0.03712824359536171,
+      "rate_tuned": 0.05408221483230591,
+      "log_ratio_e": 0.3761274814605713,
+      "log2_ratio": 0.5426372522452217,
+      "mean_act_baseline": 0.2878488302230835,
+      "mean_act_tuned": 0.30087947845458984,
+      "description": "The feature detects the string \"bin\" in file paths, particularly in virtualenv activation scripts and pip installation commands."
+    },
+    {
+      "feature_idx": 4053,
+      "rate_baseline": 0.04508429765701294,
+      "rate_tuned": 0.02680431865155697,
+      "log_ratio_e": -0.5199711322784424,
+      "log2_ratio": -0.7501597739435281,
+      "mean_act_baseline": 0.45560139417648315,
+      "mean_act_tuned": 0.45487791299819946,
+      "description": "The feature detects occurrences of the string `'last_login'` in code contexts, particularly in database fields, serializers, and user model attributes."
+    },
+    {
+      "feature_idx": 12250,
+      "rate_baseline": 0.05777609348297119,
+      "rate_tuned": 0.04139041528105736,
+      "log_ratio_e": -0.3335256576538086,
+      "log2_ratio": -0.4811758123063798,
+      "mean_act_baseline": 0.4018290340900421,
+      "mean_act_tuned": 0.37994611263275146,
+      "description": "The feature detects the term \"surface\" in Python code, specifically in pygame imports and Surface class references."
+    },
+    {
+      "feature_idx": 12507,
+      "rate_baseline": 0.04186398908495903,
+      "rate_tuned": 0.023015722632408142,
+      "log_ratio_e": -0.5982484817504883,
+      "log2_ratio": -0.863090117840781,
+      "mean_act_baseline": 0.4188482165336609,
+      "mean_act_tuned": 0.39423537254333496,
+      "description": "This feature detects temporary variable declarations (often named `tmp`) used in intermediate computations or data storage within code snippets."
+    },
+    {
+      "feature_idx": 5803,
+      "rate_baseline": 0.08609585464000702,
+      "rate_tuned": 0.0711308941245079,
+      "log_ratio_e": -0.19093942642211914,
+      "log2_ratio": -0.2754673636093744,
+      "mean_act_baseline": 0.5110703110694885,
+      "mean_act_tuned": 0.46764519810676575,
+      "description": "The feature detects substrings related to eigenvalues or eigenvectors in code contexts, particularly \"eig\", \"igen\", and \"wig\" fragments."
+    },
+    {
+      "feature_idx": 13352,
+      "rate_baseline": 0.10484940558671951,
+      "rate_tuned": 0.09026330709457397,
+      "log_ratio_e": -0.1497941017150879,
+      "log2_ratio": -0.21610720769877428,
+      "mean_act_baseline": 0.37534597516059875,
+      "mean_act_tuned": 0.37962010502815247,
+      "description": "This feature detects the keyword `expect` used as a variable name in test assertions or expected output contexts."
+    },
+    {
+      "feature_idx": 16418,
+      "rate_baseline": 0.056165941059589386,
+      "rate_tuned": 0.04015912115573883,
+      "log_ratio_e": -0.335460901260376,
+      "log2_ratio": -0.4839677786604866,
+      "mean_act_baseline": 0.3412378430366516,
+      "mean_act_tuned": 0.3444821834564209,
+      "description": "This feature detects Python import statements for the `webob` or `werkzeug` libraries, specifically when importing modules or submodules (e.g., `webob.exc`, `werkzeug.wrappers`)."
+    },
+    {
+      "feature_idx": 1369,
+      "rate_baseline": 0.022921007126569748,
+      "rate_tuned": 0.041106268763542175,
+      "log_ratio_e": 0.5841069221496582,
+      "log2_ratio": 0.8426881599342277,
+      "mean_act_baseline": 0.4679557681083679,
+      "mean_act_tuned": 0.44448891282081604,
+      "description": "This feature detects instances of MySQL database configurations where the username is set to \"root\" (often indicating default or admin access)."
+    },
+    {
+      "feature_idx": 23022,
+      "rate_baseline": 0.024531161412596703,
+      "rate_tuned": 0.0423375628888607,
+      "log_ratio_e": 0.5457305908203125,
+      "log2_ratio": 0.7873228170378689,
+      "mean_act_baseline": 0.37379583716392517,
+      "mean_act_tuned": 0.33901384472846985,
+      "description": "The feature detects the Python `from __future__ import` statement, specifically the `import` keyword in future import declarations."
+    },
+    {
+      "feature_idx": 1489,
+      "rate_baseline": 0.08050767332315445,
+      "rate_tuned": 0.06573214381933212,
+      "log_ratio_e": -0.20276451110839844,
+      "log2_ratio": -0.2925273546443616,
+      "mean_act_baseline": 0.6100456714630127,
+      "mean_act_tuned": 0.6314340829849243,
+      "description": "Feature detects HTTP status codes starting with \"4\" (client errors) in API response handling."
+    },
+    {
+      "feature_idx": 2880,
+      "rate_baseline": 0.04546315595507622,
+      "rate_tuned": 0.06071225553750992,
+      "log_ratio_e": 0.289243221282959,
+      "log2_ratio": 0.417289760955674,
+      "mean_act_baseline": 0.9585199952125549,
+      "mean_act_tuned": 0.9118490219116211,
+      "description": "The feature detects the `universal_newlines=True` parameter in Python's `subprocess` calls for text output handling."
+    },
+    {
+      "feature_idx": 8516,
+      "rate_baseline": 0.16414093971252441,
+      "rate_tuned": 0.177779883146286,
+      "log_ratio_e": 0.07982075214385986,
+      "log2_ratio": 0.11515700327797372,
+      "mean_act_baseline": 0.4001379609107971,
+      "mean_act_tuned": 0.4421713948249817,
+      "description": "This feature detects instances of the word \"record\" (or variations like \"Record\") in code contexts, particularly in variable names, class definitions, and data processing loops."
+    },
+    {
+      "feature_idx": 10279,
+      "rate_baseline": 0.047546885907649994,
+      "rate_tuned": 0.031445350497961044,
+      "log_ratio_e": -0.4134650230407715,
+      "log2_ratio": -0.596503938321962,
+      "mean_act_baseline": 0.43450555205345154,
+      "mean_act_tuned": 0.45795899629592896,
+      "description": "The feature detects the token \"build\" in file/directory paths, build system commands, or Python package configurations."
+    },
+    {
+      "feature_idx": 18988,
+      "rate_baseline": 0.21831786632537842,
+      "rate_tuned": 0.23167267441749573,
+      "log_ratio_e": 0.05937337875366211,
+      "log2_ratio": 0.08565767908873047,
+      "mean_act_baseline": 0.6320370435714722,
+      "mean_act_tuned": 0.6072146892547607,
+      "description": "The feature detects the number \"1\" when it represents a boundary in numeric ranges (e.g., [0,1] or [0,100])."
+    },
+    {
+      "feature_idx": 3013,
+      "rate_baseline": 0.023773442953824997,
+      "rate_tuned": 0.0407274104654789,
+      "log_ratio_e": 0.538332462310791,
+      "log2_ratio": 0.7766495737253231,
+      "mean_act_baseline": 0.3740340769290924,
+      "mean_act_tuned": 0.3944331407546997,
+      "description": "The feature detects Python import statements involving the word \"gene\" or its variants in module/package names."
+    },
+    {
+      "feature_idx": 19945,
+      "rate_baseline": 0.04082212597131729,
+      "rate_tuned": 0.024341732263565063,
+      "log_ratio_e": -0.5170319080352783,
+      "log2_ratio": -0.7459193697038546,
+      "mean_act_baseline": 0.3184295892715454,
+      "mean_act_tuned": 0.34303298592567444,
+      "description": "This feature detects digits in URLs that represent months in blog post dates (e.g., \"04\" for April, \"09\" for September)."
+    },
+    {
+      "feature_idx": 14313,
+      "rate_baseline": 0.05531350523233414,
+      "rate_tuned": 0.041106268763542175,
+      "log_ratio_e": -0.2968564033508301,
+      "log2_ratio": -0.42827326097037643,
+      "mean_act_baseline": 0.47756969928741455,
+      "mean_act_tuned": 0.4212079346179962,
+      "description": "Opening parenthesis or bracket in Python function calls or list definitions, often following print statements or method calls."
+    },
+    {
+      "feature_idx": 23307,
+      "rate_baseline": 0.036181095987558365,
+      "rate_tuned": 0.019416555762290955,
+      "log_ratio_e": -0.6224105358123779,
+      "log2_ratio": -0.8979485934135603,
+      "mean_act_baseline": 0.5053552985191345,
+      "mean_act_tuned": 0.4779260456562042,
+      "description": "This feature detects instances of the Python library \"networkx\" being imported or referenced in code, particularly focusing on the string \"networkx\" or its variations (e.g., \"network\u27e6x\u27e7\")."
+    },
+    {
+      "feature_idx": 10060,
+      "rate_baseline": 0.03883311152458191,
+      "rate_tuned": 0.023015722632408142,
+      "log_ratio_e": -0.5230958461761475,
+      "log2_ratio": -0.754667783187944,
+      "mean_act_baseline": 0.7327044010162354,
+      "mean_act_tuned": 0.564965009689331,
+      "description": "The feature detects the `Request` class import or instantiation from Python's `urllib.request` or `urllib2` modules."
+    },
+    {
+      "feature_idx": 5605,
+      "rate_baseline": 0.08192839473485947,
+      "rate_tuned": 0.06904716789722443,
+      "log_ratio_e": -0.17105579376220703,
+      "log2_ratio": -0.24678134537606136,
+      "mean_act_baseline": 1.045910120010376,
+      "mean_act_tuned": 1.0992183685302734,
+      "description": "The feature detects the substring \"azen\" within the name \"Pierre Cazenave\" in Python package metadata or author attribution contexts."
+    },
+    {
+      "feature_idx": 24164,
+      "rate_baseline": 0.04148513078689575,
+      "rate_tuned": 0.05502936244010925,
+      "log_ratio_e": 0.2825319766998291,
+      "log2_ratio": 0.40760748167739963,
+      "mean_act_baseline": 0.9532346725463867,
+      "mean_act_tuned": 0.8835086822509766,
+      "description": "The feature detects verbs in present participle form (\"-ing\") following the word \"Error\" in error messages, typically indicating an action that failed."
+    },
+    {
+      "feature_idx": 4638,
+      "rate_baseline": 0.04650501906871796,
+      "rate_tuned": 0.032771360129117966,
+      "log_ratio_e": -0.3500051498413086,
+      "log2_ratio": -0.5049506939616545,
+      "mean_act_baseline": 0.2845075726509094,
+      "mean_act_tuned": 0.2993124723434448,
+      "description": "The feature detects Python function attribute access, specifically `__name__`, used for logging, registration, or introspection."
+    },
+    {
+      "feature_idx": 14201,
+      "rate_baseline": 0.0677211582660675,
+      "rate_tuned": 0.08012881129980087,
+      "log_ratio_e": 0.16823673248291016,
+      "log2_ratio": 0.24271429964845767,
+      "mean_act_baseline": 0.6579532027244568,
+      "mean_act_tuned": 0.6626721024513245,
+      "description": "The feature represents a wildcard pattern (`*.`) in Python package configuration files, specifically for specifying file types."
+    },
+    {
+      "feature_idx": 9843,
+      "rate_baseline": 0.04868346452713013,
+      "rate_tuned": 0.035328660160303116,
+      "log_ratio_e": -0.3206448554992676,
+      "log2_ratio": -0.46259274291535163,
+      "mean_act_baseline": 0.44475623965263367,
+      "mean_act_tuned": 0.4369049072265625,
+      "description": "Feature detects Python exception handling patterns, specifically `APIException` imports and `raise_exception=True` validation in Django REST framework."
+    },
+    {
+      "feature_idx": 1634,
+      "rate_baseline": 0.05322977900505066,
+      "rate_tuned": 0.04015912115573883,
+      "log_ratio_e": -0.2817683219909668,
+      "log2_ratio": -0.40650576081597245,
+      "mean_act_baseline": 0.547450602054596,
+      "mean_act_tuned": 0.4994701147079468,
+      "description": "The feature detects tokens containing \"kk\", \"kin\", \"@\", or \"ic\", often in URLs, code snippets, or special character patterns."
+    },
+    {
+      "feature_idx": 23677,
+      "rate_baseline": 0.030214056372642517,
+      "rate_tuned": 0.012028793804347515,
+      "log_ratio_e": -0.921004056930542,
+      "log2_ratio": -1.3287279855723095,
+      "mean_act_baseline": 0.302496075630188,
+      "mean_act_tuned": 0.2980208396911621,
+      "description": "The feature detects occurrences of \"Program\" in Windows file paths or \"Software\" in software development metadata tags."
+    },
+    {
+      "feature_idx": 11535,
+      "rate_baseline": 0.05199848487973213,
+      "rate_tuned": 0.039211973547935486,
+      "log_ratio_e": -0.28223252296447754,
+      "log2_ratio": -0.40717546125843224,
+      "mean_act_baseline": 0.7567887902259827,
+      "mean_act_tuned": 0.8119733333587646,
+      "description": "The feature detects the token \"Intended\" in Python package metadata classifiers, specifically in \"Intended Audience\" descriptions."
+    }
+  ]
+}

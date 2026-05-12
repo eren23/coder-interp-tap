@@ -1,0 +1,70 @@
+{
+  "prompts": {
+    "py_import": {
+      "text": "from dataclasses import dataclass\nimport asyncio\n",
+      "models": {
+        "base": {
+          "heatmap_image": "media/images/demo/py_import_10_d1e5dcf2d3c7db47907d.png"
+        },
+        "lora": {
+          "heatmap_image": "media/images/demo/py_import_10_5551db902fa904fb51f2.png"
+        }
+      }
+    },
+    "py_docstring": {
+      "text": "\"\"\"\nConfiguration management for Hermes Agent.\n\"\"\"\n",
+      "models": {
+        "base": {
+          "heatmap_image": "media/images/demo/py_docstring_11_54a5cbf730c4221039dd.png"
+        },
+        "lora": {
+          "heatmap_image": "media/images/demo/py_docstring_11_e9a86262ca8f6758f765.png"
+        }
+      }
+    },
+    "ts_export": {
+      "text": "export { Button, type ButtonProps } from \"./Button\";\n",
+      "models": {
+        "base": {
+          "heatmap_image": "media/images/demo/ts_export_12_2539b6e362d2b960e566.png"
+        },
+        "lora": {
+          "heatmap_image": "media/images/demo/ts_export_12_9b7a1c2132f7019073f9.png"
+        }
+      }
+    },
+    "ts_import_destruct": {
+      "text": "import { describe, it, expect } from \"vitest\";\n",
+      "models": {
+        "base": {
+          "heatmap_image": "media/images/demo/ts_import_destruct_13_163c9e41a5423e95418a.png"
+        },
+        "lora": {
+          "heatmap_image": "media/images/demo/ts_import_destruct_13_6294ab7bf8d689a64e22.png"
+        }
+      }
+    },
+    "rust_impl": {
+      "text": "impl Drop for NoGradGuard {\n    fn drop(&mut self) {\n",
+      "models": {
+        "base": {
+          "heatmap_image": "media/images/demo/rust_impl_14_564b71869e7b88fe6864.png"
+        },
+        "lora": {
+          "heatmap_image": "media/images/demo/rust_impl_14_da5ad2b5496324577a0b.png"
+        }
+      }
+    },
+    "py_django_model": {
+      "text": "class Profile(models.Model):\n    user = models.OneToOneField(\n",
+      "models": {
+        "base": {
+          "heatmap_image": "media/images/demo/py_django_model_15_21c8ce182af713d9e1a5.png"
+        },
+        "lora": {
+          "heatmap_image": "media/images/demo/py_django_model_15_eeb8271bc52e104ffe9e.png"
+        }
+      }
+    }
+  }
+}

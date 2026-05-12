@@ -26,3 +26,16 @@ data/*.arrow
 .idea/
 .vscode/
 *.swp
+
+# Tooling local state
+.attocode/
+.claude/
+.playwright-mcp/
+.superpowers/
+**/.superpowers/
+
+# Local dev screenshots (Playwright captures, design reference shots)
+/article-*.png
+/attr-graph-*.png
+/browser-*.png
+/goodfire-*.png

@@ -1,0 +1,40 @@
+{
+  "title": "What does a fine-tune actually learn?",
+  "subtitle": "A fine-tune is a routing change, not a concept-addition. We trained a personal-style LoRA on 20 GitHub repos and looked inside.",
+  "slug": "what-does-a-fine-tune-actually-learn",
+  "date": "2026-05-12",
+  "publisher": "Dria",
+  "authors": [
+    { "name": "eren23", "github": "eren23" }
+  ],
+  "tags": [
+    "interpretability",
+    "fine-tuning",
+    "lora",
+    "vpd",
+    "saes",
+    "personalization"
+  ],
+  "kind": "research",
+  "status": "draft",
+  "summary": "We trained a personal-style LoRA on Qwen2.5-Coder-1.5B and read it three ways: SAE drift, full Goodfire VPD with adversarial PGD, and multi-layer integrated-gradients attribution. The headline SAE result almost shipped — but the same labels appeared on a BASE-model control. What actually changed is routing: alive component counts triple, attention reweights, and pub use crate:: predicts 'config' (the author's actual crate name) instead of 'error'.",
+  "deliverable": "article.html",
+  "self_contained": true,
+  "external_calls_at_runtime": false,
+  "widgets": [
+    {
+      "id": "components-browser",
+      "path": "widgets/components-browser.html",
+      "title": "Components browser",
+      "kind": "iframe"
+    },
+    {
+      "id": "attribution-graph",
+      "path": "widgets/attribution-graph.html",
+      "title": "Multi-layer attribution graph",
+      "kind": "iframe"
+    }
+  ],
+  "repo": "https://github.com/eren23/coder-interp-tap",
+  "wandb_project": "eren23/coder-interp-pilot"
+}
